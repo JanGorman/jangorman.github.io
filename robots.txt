@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://JanGorman.github.io/sitemap.xml 
