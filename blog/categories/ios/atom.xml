@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Jan Gorman]]></title>
-  <link href="http://JanGorman.github.io/atom.xml" rel="self"/>
+  <title><![CDATA[Category: Ios | Jan Gorman]]></title>
+  <link href="http://JanGorman.github.io/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
   <updated>2014-08-31T18:08:49+02:00</updated>
   <id>http://JanGorman.github.io/</id>
