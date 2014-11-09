@@ -177,7 +177,7 @@
 </span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
 
 
-<p>By making the behavior a property of the class it is now easy to add and replace behaviors at runtime. You might begin to see how this can lead to very flexible designs. A different approach here could have been to create an abstract base view and then create two concrete implementations for different tap behaviors but as soon as you need a new kind of behavior you&rsquo;d be forced to create a new subclass. And now imagine that you have  multiple behaviors in a class – the subclass approach would lead to all kinds of combinations of subclasses that each have to implement variations of behavor.</p>
+<p>By making the behavior a property of the class it is now easy to add and replace behaviors at runtime. You might begin to see how this can lead to very flexible designs. A different approach here could have been to create an abstract base view and then create two concrete implementations for different tap behaviors but as soon as you need a new kind of behavior you&rsquo;d be forced to create a new subclass. And now imagine that you have  multiple behaviors in a class – the subclass approach would lead to all kinds of combinations of subclasses that each have to implement variations of behavior.</p>
 
 <p>Even if this is an extremely simple pattern, it&rsquo;s good to keep it in mind the next time you have to implement varying behavior in some kind of base class. Would composing work better than inheriting?</p>
 
