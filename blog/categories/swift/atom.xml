@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Swift | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/swift/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2014-11-09T11:57:34+01:00</updated>
+  <updated>2014-11-17T22:21:23+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -12,6 +12,118 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Design Patterns in Swift: Command]]></title>
+    <link href="http://JanGorman.github.io/blog/2014/11/17/design-patterns-in-swift-command/"/>
+    <updated>2014-11-17T21:19:18+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2014/11/17/design-patterns-in-swift-command</id>
+    <content type="html"><![CDATA[<p>Continuing on in the series, lets have a look at the Command Pattern and how to implement it in Swift. As <a href="http://en.wikipedia.org/wiki/Command_pattern">Wikipedia</a> so eloquently defines it</p>
+
+<p><blockquote><p>In object-oriented programming, the command pattern is a behavioral design pattern in which an object is used to represent and encapsulate all the information needed to call a method at a later time.</p></blockquote></p>
+
+<p>The encapsulation part is key. Say you have a bunch of different objects that can all do <em>something</em> and you want to expose those in a unified kind of way then the command pattern is your friend. Another great feature is that it allows for undos of those actions as you can keep a stack of the commands you ran and just pop them off the stack with an undo method. So what does that look like? First you define your command protocol:</p>
+
+<pre><code>protocol Command {
+
+    func execute()
+    func undo()
+
+}
+</code></pre>
+
+<p>Easy enough. Lets get concrete:</p>
+
+<pre><code>class Light {
+
+    func on() {
+        println("The light is on")
+    }
+
+    func off() {
+        println("The light is off")
+    }
+
+}
+
+class LightCommand: Command {
+
+    let light: Light
+
+    init(light: Light) {
+        self.light = light
+    }
+
+    func execute() {
+        light.on()
+    }
+
+    func undo() {
+        light.off()
+    }
+
+}
+</code></pre>
+
+<p>Apart from producing a bunch of code that wraps the obvious nothing magic has happened yet. But now imagine you have some other appliance that also has an on/off kind of functionality but with different method signatures:</p>
+
+<pre><code>class Heating {
+
+    func turnUp(degrees: Int) {
+        println("The heating is set to \(degrees)°C")
+    }
+
+    func turnOff() {
+        println("The heating is off")
+    }
+
+}
+
+class HeatingCommand: Command {
+
+    let heating: Heating
+
+    init(heating: Heating) {
+        self.heating = heating
+    }
+
+    func execute() {
+        heating.turnUp(23)
+    }
+
+    func undo() {
+        heating.turnOff()
+    }
+
+}
+</code></pre>
+
+<p>Metric of course.</p>
+
+<p>And it gets neater: There&rsquo;s of course nothing to stop you from bunching together multiple method calls into a single command. So to continue with the home automation theme, you could have a macro type command <code>ArriveAtHomeCommand</code> that switches on a bunch of lights, sets the heating to a comfortable level and switches on the TV.</p>
+
+<p>Too much code! More cryptic! Ok, ok. So you can also do a similar thing using closures that are your commands. The simplified way to define a closure makes that at least a bit more readable than it was in Objective-C:</p>
+
+<pre><code>typealias CommandClosure = () -&gt; Void
+
+var commands = [CommandClosure]()
+
+let heatingCommand = { () -&gt; Void in
+    let heating = Heating()
+    heating.turnUp(23)
+}
+
+commands.append(heatingCommand)
+
+// Much later
+commands[0]()
+</code></pre>
+
+<p>That also works. The option to store closures/functions inside of arrays is pretty cool but here you loose the build in undo option. The way around that would be to define both an execute and undo block and whenever you execute a command you push its corresponding undo into your array/stack. But if you&rsquo;re only going one way and can skip the undo, this is a viable way to go.</p>
+
+<p>Again the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Design Patterns in Swift: Strategy]]></title>
