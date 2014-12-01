@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Design Patterns | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/design-patterns/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2014-11-17T22:21:23+01:00</updated>
+  <updated>2014-12-01T21:35:06+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -12,6 +12,161 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Design Patterns in Swift: Adapter Pattern]]></title>
+    <link href="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/"/>
+    <updated>2014-12-01T20:44:17+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern</id>
+    <content type="html"><![CDATA[<p>Already December! Time for a new chapter on applying design patterns in Swift. This time it&rsquo;s the <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter Pattern&rsquo;s</a> turn. Good stuff! And simple!</p>
+
+<p>So what is it and what can it do for you? The Adapter Pattern converts the interface of one class into another interface. That&rsquo;s it. And with this simple pattern you can let classes work together that otherwise couldn&rsquo;t.</p>
+
+<p>So let&rsquo;s assume you have the following:</p>
+
+<pre><code>protocol MusicPlayer {
+
+    func insertMedia()
+    func play()
+
+}
+
+class CassettePlayer: MusicPlayer {
+
+    func insertMedia() {
+        println("Insert mixtape")
+    }
+
+    func play() {
+        println("Push down clunky button and play")
+    }
+
+}
+</code></pre>
+
+<p>Clearly, this kind if thing is only <a href="https://www.youtube.com/watch?v=dIm87r9lnD0">acceptable in the 80s</a>.</p>
+
+<p>Fast forward to now, Spotify, beats, you name it. How do you travel back in time and get a client that accepts a <code>MusicPlayer</code> to stream and play a track? You adapt it:</p>
+
+<pre><code>protocol MediaPlayer {
+
+    func getMedia(title: String)
+    func play()
+
+}
+
+class StreamingMediaPlayer: MediaPlayer {
+
+    func getMedia(title: String) {
+        println("Acquiring \(title) from the cloud")
+    }
+
+    func play() {
+        println("Playing!")
+    }
+
+}
+
+// MARK: Adapter in action
+
+class StreamingMediaPlayerAdapter: MusicPlayer {
+
+    let player: StreamingMediaPlayer
+
+    init(player: StreamingMediaPlayer) {
+        self.player = player
+    }
+
+    func insertMedia(title: String) {
+        player.getMedia(title)
+    }
+
+    func play() {
+        player.play()
+    }
+
+}
+</code></pre>
+
+<p>Jaws drop in amazement. But now consider your existing project that you want to spice up with some of that Swift. You&rsquo;ve written your amazing new classes, time to integrate with Objective-C. So you head over to <a href="https://developer.apple.com/library/ios/documentation/swift/conceptual/BuildingCocoaApps/MixandMatch.html#//apple_ref/doc/uid/TP40014216-CH10-XID_77">Using Swift with Cocoa and Objective-C</a> only to find that the new goodness doesn&rsquo;t all work. All of these aren&rsquo;t compatible with Objective-C:</p>
+
+<ul>
+<li>Generics</li>
+<li>Tuples</li>
+<li>Enumerations defined in Swift</li>
+<li>Structures defined in Swift</li>
+<li>Top-level functions defined in Swift</li>
+<li>Global variables defined in Swift</li>
+<li>Typealiases defined in Swift</li>
+<li>Swift-style variadics</li>
+<li>Nested types</li>
+<li>Curried functions</li>
+</ul>
+
+
+<p>Not to despair though, you can still go ahead and be as idiomatic in Swift as you want. With some extra effort you can get the old to talk to the new. Consider a Swift only protocol that just needs to use a tuple:</p>
+
+<pre><code>protocol Legend {
+
+    func doSomething() -&gt; (String, String)
+
+}
+
+class IAmLegend: Legend {
+
+    func doSomething() -&gt; (String, String) {
+        return ("very", "important")
+    }
+
+}
+
+func doSomethingWithLegend(legend: Legend) {
+    let (first, second) = legend.doSomething()
+    // Do something else with these variables
+}
+</code></pre>
+
+<p>Important stuff going on. You get the idea. But obviously you won&rsquo;t be able to call that from any existing code.</p>
+
+<pre><code>@objc class Compatible {
+
+    let first: String
+    let second: String
+
+    init(first: String, second: String) {
+        self.first = first
+        self.second = second
+    }
+
+}
+
+class LegendSwiftAdapter: Legend {
+
+    let compatible: Compatible
+
+    init(compatible: Compatible) {
+        self.compatible = compatible
+    }
+
+    func doSomething() -&gt; (String, String) {
+         return (compatible.first, compatible.second)
+    }
+
+}
+
+@objc class LegendObjcAdapter {
+
+    func doSomethingWithATuple(compatible: Compatible) {
+        let adapter = LegendSwiftAdapter(compatible)
+        doSomethingWithLegend(adapter)
+    }
+
+}
+</code></pre>
+
+<p>I hope it&rsquo;s somewhat clear what&rsquo;s going on. Somewhat contrived example maybe… I&rsquo;ll upload a more practical application soon-ish. Anyways, that&rsquo;s the Adapter Pattern applied in Swift for you. As always the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Design Patterns in Swift: Command]]></title>
