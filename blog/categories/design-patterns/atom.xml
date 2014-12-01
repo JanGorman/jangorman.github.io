@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Design Patterns | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/design-patterns/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2014-12-01T21:35:06+01:00</updated>
+  <updated>2014-12-01T21:37:27+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -164,7 +164,7 @@ class LegendSwiftAdapter: Legend {
 }
 </code></pre>
 
-<p>I hope it&rsquo;s somewhat clear what&rsquo;s going on. Somewhat contrived example maybe… I&rsquo;ll upload a more practical application soon-ish. Anyways, that&rsquo;s the Adapter Pattern applied in Swift for you. As always the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
+<p>I hope it&rsquo;s somewhat clear what&rsquo;s going on. Contrived example maybe… I&rsquo;ll upload a more practical application soon-ish. Anyways, that&rsquo;s the Adapter Pattern applied in Swift for you. As always the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
 ]]></content>
   </entry>
   
