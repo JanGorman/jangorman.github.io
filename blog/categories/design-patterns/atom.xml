@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Design Patterns | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/design-patterns/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2014-12-01T21:37:27+01:00</updated>
+  <updated>2015-01-18T15:56:45+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -12,6 +12,146 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Better MVC]]></title>
+    <link href="http://JanGorman.github.io/blog/2015/01/14/better-mvc/"/>
+    <updated>2015-01-14T21:25:14+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2015/01/14/better-mvc</id>
+    <content type="html"><![CDATA[<p>I had been meaning to write this for a while now. And even if the examples are all in Swift (because shiny) the same can be applied to Objective-C code as well without any problem.</p>
+
+<p>Slimming down your iOS view controllers is a big topic around the office and there was even an entire issue of <a href="http://www.objc.io/issue-1/">objc.io</a> centered around the topic (as well as another one on <a href="http://www.objc.io/issue-13/">architecture</a>).</p>
+
+<p>We had also tried some <a href="http://www.objc.io/issue-13/mvvm.html">MVVM</a> as well as <a href="http://www.objc.io/issue-13/viper.html">Viper</a> (ok, being an avid Uncle Bob <a href="https://cleancoders.com">clean code</a> watcher and reader, I know this is about a lot more but imho doesn&rsquo;t apply too well to iOS apps since there is only <em>one</em> presenter) but neither of those models really stuck. If you look at what Wikipedia has to say about <a href="http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">MVC</a> you will notice that it mentions the model notifying its associated views and controllers. Aha! So why not try that:</p>
+
+<pre><code class="swift">class SimpleView: UIView {
+  …
+  @IBOutlet weak var nameTextField: UITextField!
+  weak var model: SimpleModel! {
+      didSet {
+          model.addObserver(self, forKeyPath: "name", options: .New, context: &amp;context)
+      }
+  }
+
+  …
+
+  override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject:AnyObject],
+                                       context: UnsafeMutablePointer&lt;Void&gt;) {
+      if context == &amp;self.context {
+          nameLabel.text = "Hi there, \(change[NSKeyValueChangeNewKey]!)"
+      } else {
+          super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
+      }
+  }
+
+  @IBAction func didSubmit(sender: AnyObject) {
+      controller.didSubmitName(nameTextField.text)
+  }
+}
+</code></pre>
+
+<p>The view takes care of all it&rsquo;s own presentation and not the controller (as you&rsquo;ll see in code most of the time). Now of course KVO can get pretty cumbersome when there are a lot of properties involved but you get the point. The controller has nothing to do with the presentation of the model and just received requests from the view to update the model. What does the controller look like?</p>
+
+<pre><code class="swift">protocol SimpleController: class {
+
+    func didSubmitName(name: String)
+
+}
+
+class SimpleViewController: UIViewController, SimpleController {
+
+    let model = SimpleModel()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let mainView = self.view as SimpleView
+        mainView.controller = self
+        mainView.model = model
+    }
+
+    func didSubmitName(name: String) {
+        model.name = name
+    }
+
+}
+</code></pre>
+
+<p>Ok, very simple example indeed. What about something more involved:</p>
+
+<pre><code class="swift">class AdvancedView: UIView, UserModelObserver, RemoteModelObserver {
+    …
+    weak var userModel: UserModel! {
+        didSet {
+            userModel.addObserver(self)
+        }
+    }
+    weak var remoteModel: RemoteModel! {
+        didSet {
+            remoteModel.addObserver(self)
+        }
+    }
+    …  
+}
+</code></pre>
+
+<p>As you can see, the model implements two protocols this time and listens to two different models for changes. And again, the controller is very slim:</p>
+
+<pre><code class="swift">class AdvancedViewController: UIViewController {
+
+    let userModel = UserModel()
+    let remoteModel = RemoteModel()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        let advancedView = view as AdvancedView
+        advancedView.controller = self
+        advancedView.userModel = userModel
+        advancedView.remoteModel = remoteModel
+    }
+
+    func submit(#firstName: String, lastName: String) {
+        userModel.firstName = firstName
+        userModel.lastName = lastName
+        userModel.validate()
+    }
+
+    func load() {
+        remoteModel.load()
+    }
+
+}
+</code></pre>
+
+<p>Any validation logic is done inside the models (which makes it easily testable). Code for loading remote resources is also done in the model:</p>
+
+<pre><code class="swift">func load() {
+    if let URL = NSURL(string: Constants.URLString) {
+        let session = NSURLSession.sharedSession()
+        let task = session.dataTaskWithURL(URL) {
+            (data, response, error) in
+            if error != nil {
+                println("Epic Fail")
+                return
+            }
+
+            var jsonError: NSError?
+            let json = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments,
+                    error: &amp;jsonError) as NSArray
+            self.comments = json
+            dispatch_async(dispatch_get_main_queue()) {
+                self.notifyObservers()
+            }
+        }
+        task.resume()
+    }
+}
+</code></pre>
+
+<p>I&rsquo;ve uploaded a sample project over on <a href="https://github.com/JanGorman/BetterMVC">github</a> including a third example of a <code>UITableViewController</code> and some test code.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Design Patterns in Swift: Adapter Pattern]]></title>
@@ -24,7 +164,7 @@
 
 <p>So let&rsquo;s assume you have the following:</p>
 
-<pre><code>protocol MusicPlayer {
+<pre><code class="swift">protocol MusicPlayer {
 
     func insertMedia()
     func play()
@@ -48,7 +188,7 @@ class CassettePlayer: MusicPlayer {
 
 <p>Fast forward to now, Spotify, beats, you name it. How do you travel back in time and get a client that accepts a <code>MusicPlayer</code> to stream and play a track? You adapt it:</p>
 
-<pre><code>protocol MediaPlayer {
+<pre><code class="swift">protocol MediaPlayer {
 
     func getMedia(title: String)
     func play()
@@ -106,7 +246,7 @@ class StreamingMediaPlayerAdapter: MusicPlayer {
 
 <p>Not to despair though, you can still go ahead and be as idiomatic in Swift as you want. With some extra effort you can get the old to talk to the new. Consider a Swift only protocol that just needs to use a tuple:</p>
 
-<pre><code>protocol Legend {
+<pre><code class="swift">protocol Legend {
 
     func doSomething() -&gt; (String, String)
 
@@ -128,7 +268,7 @@ func doSomethingWithLegend(legend: Legend) {
 
 <p>Important stuff going on. You get the idea. But obviously you won&rsquo;t be able to call that from any existing code.</p>
 
-<pre><code>@objc class Compatible {
+<pre><code class="swift">@objc class Compatible {
 
     let first: String
     let second: String
@@ -179,7 +319,7 @@ class LegendSwiftAdapter: Legend {
 
 <p>The encapsulation part is key. Say you have a bunch of different objects that can all do <em>something</em> and you want to expose those in a unified kind of way then the command pattern is your friend. Another great feature is that it allows for undos of those actions as you can keep a stack of the commands you ran and just pop them off the stack with an undo method. So what does that look like? First you define your command protocol:</p>
 
-<pre><code>protocol Command {
+<pre><code class="swift">protocol Command {
 
     func execute()
     func undo()
@@ -189,7 +329,7 @@ class LegendSwiftAdapter: Legend {
 
 <p>Easy enough. Lets get concrete:</p>
 
-<pre><code>class Light {
+<pre><code class="swift">class Light {
 
     func on() {
         println("The light is on")
@@ -222,7 +362,7 @@ class LightCommand: Command {
 
 <p>Apart from producing a bunch of code that wraps the obvious nothing magic has happened yet. But now imagine you have some other appliance that also has an on/off kind of functionality but with different method signatures:</p>
 
-<pre><code>class Heating {
+<pre><code class="swift">class Heating {
 
     func turnUp(degrees: Int) {
         println("The heating is set to \(degrees)°C")
@@ -259,7 +399,7 @@ class HeatingCommand: Command {
 
 <p>Too much code! More cryptic! Ok, ok. So you can also do a similar thing using closures that are your commands. The simplified way to define a closure makes that at least a bit more readable than it was in Objective-C:</p>
 
-<pre><code>typealias CommandClosure = () -&gt; Void
+<pre><code class="swift">typealias CommandClosure = () -&gt; Void
 
 var commands = [CommandClosure]()
 
@@ -291,7 +431,7 @@ commands[0]()
 
 <p>First, your behavior protocol and two possible implementations:</p>
 
-<pre><code>protocol TapBehavior {
+<pre><code class="swift">protocol TapBehavior {
 
     func tap()
 
@@ -318,7 +458,7 @@ class WishListTapBehavior: TapBehavior {
 
 <p>Next, you&rsquo;d want to actually use the behavior:</p>
 
-<pre><code>class SomeViewWithAButton: UIView {
+<pre><code class="swift">class SomeViewWithAButton: UIView {
 
     @IBOutlet weak var aButton: UIButton!
 

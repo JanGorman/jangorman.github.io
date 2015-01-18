@@ -4,7 +4,7 @@
   <title><![CDATA[Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2014-12-01T21:37:27+01:00</updated>
+  <updated>2015-01-18T15:56:45+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -14,17 +14,17 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Design Patterns in Swift: Adapter Pattern]]></title>
-    <link href="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/"/>
-    <updated>2014-12-01T20:44:17+01:00</updated>
-    <id>http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern</id>
-    <content type="html"><![CDATA[<p>Already December! Time for a new chapter on applying design patterns in Swift. This time it&rsquo;s the <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter Pattern&rsquo;s</a> turn. Good stuff! And simple!</p>
+    <title type="html"><![CDATA[Better MVC]]></title>
+    <link href="http://JanGorman.github.io/blog/2015/01/14/better-mvc/"/>
+    <updated>2015-01-14T21:25:14+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2015/01/14/better-mvc</id>
+    <content type="html"><![CDATA[<p>I had been meaning to write this for a while now. And even if the examples are all in Swift (because shiny) the same can be applied to Objective-C code as well without any problem.</p>
 
-<p>So what is it and what can it do for you? The Adapter Pattern converts the interface of one class into another interface. That&rsquo;s it. And with this simple pattern you can let classes work together that otherwise couldn&rsquo;t.</p>
+<p>Slimming down your iOS view controllers is a big topic around the office and there was even an entire issue of <a href="http://www.objc.io/issue-1/">objc.io</a> centered around the topic (as well as another one on <a href="http://www.objc.io/issue-13/">architecture</a>).</p>
 
-<p>So let&rsquo;s assume you have the following:</p>
+<p>We had also tried some <a href="http://www.objc.io/issue-13/mvvm.html">MVVM</a> as well as <a href="http://www.objc.io/issue-13/viper.html">Viper</a> (ok, being an avid Uncle Bob <a href="https://cleancoders.com">clean code</a> watcher and reader, I know this is about a lot more but imho doesn&rsquo;t apply too well to iOS apps since there is only <em>one</em> presenter) but neither of those models really stuck. If you look at what Wikipedia has to say about <a href="http://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">MVC</a> you will notice that it mentions the model notifying its associated views and controllers. Aha! So why not try that:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -42,31 +42,284 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol MusicPlayer {
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="nl">SimpleView</span><span class="p">:</span> <span class="bp">UIView</span> <span class="p">{</span>
+</span><span class='line'>  <span class="err">…</span>
+</span><span class='line'>  <span class="p">@</span><span class="kt">IBOutlet</span> <span class="k">weak</span> <span class="k">var</span> <span class="nl">nameTextField</span><span class="p">:</span> <span class="bp">UITextField</span><span class="o">!</span>
+</span><span class='line'>  <span class="k">weak</span> <span class="k">var</span> <span class="nl">model</span><span class="p">:</span> <span class="n">SimpleModel</span><span class="o">!</span> <span class="p">{</span>
+</span><span class='line'>      <span class="kr">didSet</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">model</span><span class="p">.</span><span class="n">addObserver</span><span class="p">(</span><span class="nb">self</span><span class="p">,</span> <span class="nl">forKeyPath</span><span class="p">:</span> <span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="nl">options</span><span class="p">:</span> <span class="p">.</span><span class="n">New</span><span class="p">,</span> <span class="nl">context</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">context</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    func insertMedia()
-</span><span class='line'>    func play()
+</span><span class='line'>  <span class="err">…</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'>  <span class="kr">override</span> <span class="k">func</span> <span class="n">observeValueForKeyPath</span><span class="p">(</span><span class="nl">keyPath</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="n">ofObject</span> <span class="nl">object</span><span class="p">:</span> <span class="n">AnyObject</span><span class="p">,</span> <span class="nl">change</span><span class="p">:</span> <span class="p">[</span><span class="nl">NSObject</span><span class="p">:</span><span class="n">AnyObject</span><span class="p">],</span>
+</span><span class='line'>                                       <span class="nl">context</span><span class="p">:</span> <span class="n">UnsafeMutablePointer</span><span class="o">&lt;</span><span class="n">Void</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">if</span> <span class="n">context</span> <span class="o">==</span> <span class="o">&amp;</span><span class="nb">self</span><span class="p">.</span><span class="n">context</span> <span class="p">{</span>
+</span><span class='line'>          <span class="n">nameLabel</span><span class="p">.</span><span class="n">text</span> <span class="o">=</span> <span class="s">&quot;Hi there, \(change[NSKeyValueChangeNewKey]!)&quot;</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nb">super</span><span class="p">.</span><span class="n">observeValueForKeyPath</span><span class="p">(</span><span class="n">keyPath</span><span class="p">,</span> <span class="nl">ofObject</span><span class="p">:</span> <span class="n">object</span><span class="p">,</span> <span class="nl">change</span><span class="p">:</span> <span class="n">change</span><span class="p">,</span> <span class="nl">context</span><span class="p">:</span> <span class="n">context</span><span class="p">)</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class CassettePlayer: MusicPlayer {
+</span><span class='line'>  <span class="p">@</span><span class="kt">IBAction</span> <span class="k">func</span> <span class="n">didSubmit</span><span class="p">(</span><span class="nl">sender</span><span class="p">:</span> <span class="n">AnyObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">controller</span><span class="p">.</span><span class="n">didSubmitName</span><span class="p">(</span><span class="n">nameTextField</span><span class="p">.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The view takes care of all it&rsquo;s own presentation and not the controller (as you&rsquo;ll see in code most of the time). Now of course KVO can get pretty cumbersome when there are a lot of properties involved but you get the point. The controller has nothing to do with the presentation of the model and just received requests from the view to update the model. What does the controller look like?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="nl">SimpleController</span><span class="p">:</span> <span class="k">class</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func insertMedia() {
-</span><span class='line'>        println("Insert mixtape")
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">didSubmitName</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'>    func play() {
-</span><span class='line'>        println("Push down clunky button and play")
-</span><span class='line'>    }
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="k">class</span> <span class="nl">SimpleViewController</span><span class="p">:</span> <span class="bp">UIViewController</span><span class="p">,</span> <span class="n">SimpleController</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="n">model</span> <span class="o">=</span> <span class="n">SimpleModel</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kr">override</span> <span class="k">func</span> <span class="n">viewDidLoad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">super</span><span class="p">.</span><span class="n">viewDidLoad</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">let</span> <span class="n">mainView</span> <span class="o">=</span> <span class="nb">self</span><span class="p">.</span><span class="n">view</span> <span class="kt">as</span> <span class="n">SimpleView</span>
+</span><span class='line'>        <span class="n">mainView</span><span class="p">.</span><span class="n">controller</span> <span class="o">=</span> <span class="nb">self</span>
+</span><span class='line'>        <span class="n">mainView</span><span class="p">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">didSubmitName</span><span class="p">(</span><span class="nl">name</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">model</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Ok, very simple example indeed. What about something more involved:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="nl">AdvancedView</span><span class="p">:</span> <span class="bp">UIView</span><span class="p">,</span> <span class="n">UserModelObserver</span><span class="p">,</span> <span class="n">RemoteModelObserver</span> <span class="p">{</span>
+</span><span class='line'>    <span class="err">…</span>
+</span><span class='line'>    <span class="k">weak</span> <span class="k">var</span> <span class="nl">userModel</span><span class="p">:</span> <span class="n">UserModel</span><span class="o">!</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kr">didSet</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">userModel</span><span class="p">.</span><span class="n">addObserver</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">weak</span> <span class="k">var</span> <span class="nl">remoteModel</span><span class="p">:</span> <span class="n">RemoteModel</span><span class="o">!</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kr">didSet</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">remoteModel</span><span class="p">.</span><span class="n">addObserver</span><span class="p">(</span><span class="nb">self</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="err">…</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you can see, the model implements two protocols this time and listens to two different models for changes. And again, the controller is very slim:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="nl">AdvancedViewController</span><span class="p">:</span> <span class="bp">UIViewController</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="n">userModel</span> <span class="o">=</span> <span class="n">UserModel</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">let</span> <span class="n">remoteModel</span> <span class="o">=</span> <span class="n">RemoteModel</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kr">override</span> <span class="k">func</span> <span class="n">viewDidLoad</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">super</span><span class="p">.</span><span class="n">viewDidLoad</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">let</span> <span class="n">advancedView</span> <span class="o">=</span> <span class="n">view</span> <span class="kt">as</span> <span class="n">AdvancedView</span>
+</span><span class='line'>        <span class="n">advancedView</span><span class="p">.</span><span class="n">controller</span> <span class="o">=</span> <span class="nb">self</span>
+</span><span class='line'>        <span class="n">advancedView</span><span class="p">.</span><span class="n">userModel</span> <span class="o">=</span> <span class="n">userModel</span>
+</span><span class='line'>        <span class="n">advancedView</span><span class="p">.</span><span class="n">remoteModel</span> <span class="o">=</span> <span class="n">remoteModel</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">submit</span><span class="p">(</span><span class="err">#</span><span class="nl">firstName</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">lastName</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">userModel</span><span class="p">.</span><span class="n">firstName</span> <span class="o">=</span> <span class="n">firstName</span>
+</span><span class='line'>        <span class="n">userModel</span><span class="p">.</span><span class="n">lastName</span> <span class="o">=</span> <span class="n">lastName</span>
+</span><span class='line'>        <span class="n">userModel</span><span class="p">.</span><span class="n">validate</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">load</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">remoteModel</span><span class="p">.</span><span class="n">load</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Any validation logic is done inside the models (which makes it easily testable). Code for loading remote resources is also done in the model:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">func</span> <span class="nf">load</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="k">let</span> <span class="n">URL</span> <span class="o">=</span> <span class="bp">NSURL</span><span class="p">(</span><span class="nl">string</span><span class="p">:</span> <span class="n">Constants</span><span class="p">.</span><span class="n">URLString</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">let</span> <span class="n">session</span> <span class="o">=</span> <span class="bp">NSURLSession</span><span class="p">.</span><span class="n">sharedSession</span><span class="p">()</span>
+</span><span class='line'>        <span class="k">let</span> <span class="n">task</span> <span class="o">=</span> <span class="n">session</span><span class="p">.</span><span class="n">dataTaskWithURL</span><span class="p">(</span><span class="n">URL</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span> <span class="k">in</span>
+</span><span class='line'>            <span class="k">if</span> <span class="n">error</span> <span class="o">!=</span> <span class="nb">nil</span> <span class="p">{</span>
+</span><span class='line'>                <span class="n">println</span><span class="p">(</span><span class="s">&quot;Epic Fail&quot;</span><span class="p">)</span>
+</span><span class='line'>                <span class="k">return</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="k">var</span> <span class="nl">jsonError</span><span class="p">:</span> <span class="bp">NSError</span><span class="o">?</span>
+</span><span class='line'>            <span class="k">let</span> <span class="n">json</span> <span class="o">=</span> <span class="bp">NSJSONSerialization</span><span class="p">.</span><span class="n">JSONObjectWithData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nl">options</span><span class="p">:</span> <span class="n">NSJSONReadingOptions</span><span class="p">.</span><span class="n">AllowFragments</span><span class="p">,</span>
+</span><span class='line'>                    <span class="nl">error</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">jsonError</span><span class="p">)</span> <span class="kt">as</span> <span class="bp">NSArray</span>
+</span><span class='line'>            <span class="nb">self</span><span class="p">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">json</span>
+</span><span class='line'>            <span class="n">dispatch_async</span><span class="p">(</span><span class="n">dispatch_get_main_queue</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nb">self</span><span class="p">.</span><span class="n">notifyObservers</span><span class="p">()</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="n">task</span><span class="p">.</span><span class="n">resume</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I&rsquo;ve uploaded a sample project over on <a href="https://github.com/JanGorman/BetterMVC">github</a> including a third example of a <code>UITableViewController</code> and some test code.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Design Patterns in Swift: Adapter Pattern]]></title>
+    <link href="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/"/>
+    <updated>2014-12-01T20:44:17+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern</id>
+    <content type="html"><![CDATA[<p>Already December! Time for a new chapter on applying design patterns in Swift. This time it&rsquo;s the <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter Pattern&rsquo;s</a> turn. Good stuff! And simple!</p>
+
+<p>So what is it and what can it do for you? The Adapter Pattern converts the interface of one class into another interface. That&rsquo;s it. And with this simple pattern you can let classes work together that otherwise couldn&rsquo;t.</p>
+
+<p>So let&rsquo;s assume you have the following:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">CassettePlayer</span><span class="p">:</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Insert mixtape&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Push down clunky button and play&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Clearly, this kind if thing is only <a href="https://www.youtube.com/watch?v=dIm87r9lnD0">acceptable in the 80s</a>.</p>
 
 <p>Fast forward to now, Spotify, beats, you name it. How do you travel back in time and get a client that accepts a <code>MusicPlayer</code> to stream and play a track? You adapt it:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -104,44 +357,44 @@
 <span class='line-number'>36</span>
 <span class='line-number'>37</span>
 <span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol MediaPlayer {
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">MediaPlayer</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func getMedia(title: String)
-</span><span class='line'>    func play()
+</span><span class='line'>    <span class="k">func</span> <span class="n">getMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class StreamingMediaPlayer: MediaPlayer {
+</span><span class='line'><span class="k">class</span> <span class="nl">StreamingMediaPlayer</span><span class="p">:</span> <span class="n">MediaPlayer</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func getMedia(title: String) {
-</span><span class='line'>        println("Acquiring \(title) from the cloud")
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">getMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Acquiring \(title) from the cloud&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    func play() {
-</span><span class='line'>        println("Playing!")
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Playing!&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>// MARK: Adapter in action
+</span><span class='line'><span class="c1">// MARK: Adapter in action</span>
 </span><span class='line'>
-</span><span class='line'>class StreamingMediaPlayerAdapter: MusicPlayer {
+</span><span class='line'><span class="k">class</span> <span class="nl">StreamingMediaPlayerAdapter</span><span class="p">:</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    let player: StreamingMediaPlayer
+</span><span class='line'>    <span class="k">let</span> <span class="nl">player</span><span class="p">:</span> <span class="n">StreamingMediaPlayer</span>
 </span><span class='line'>
-</span><span class='line'>    init(player: StreamingMediaPlayer) {
-</span><span class='line'>        self.player = player
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">player</span><span class="p">:</span> <span class="n">StreamingMediaPlayer</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    func insertMedia(title: String) {
-</span><span class='line'>        player.getMedia(title)
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">player</span><span class="p">.</span><span class="n">getMedia</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    func play() {
-</span><span class='line'>        player.play()
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">player</span><span class="p">.</span><span class="n">play</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -163,7 +416,7 @@
 
 <p>Not to despair though, you can still go ahead and be as idiomatic in Swift as you want. With some extra effort you can get the old to talk to the new. Consider a Swift only protocol that just needs to use a tuple:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -181,29 +434,30 @@
 <span class='line-number'>16</span>
 <span class='line-number'>17</span>
 <span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol Legend {
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">Legend</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func doSomething() -&gt; (String, String)
+</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class IAmLegend: Legend {
+</span><span class='line'><span class="k">class</span> <span class="nl">IAmLegend</span><span class="p">:</span> <span class="n">Legend</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func doSomething() -&gt; (String, String) {
-</span><span class='line'>        return ("very", "important")
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;very&quot;</span><span class="p">,</span> <span class="s">&quot;important&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>func doSomethingWithLegend(legend: Legend) {
-</span><span class='line'>    let (first, second) = legend.doSomething()
-</span><span class='line'>    // Do something else with these variables
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="k">func</span> <span class="n">doSomethingWithLegend</span><span class="p">(</span><span class="nl">legend</span><span class="p">:</span> <span class="n">Legend</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">let</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="o">=</span> <span class="n">legend</span><span class="p">.</span><span class="n">doSomething</span><span class="p">()</span>
+</span><span class='line'>    <span class="c1">// Do something else with these variables</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Important stuff going on. You get the idea. But obviously you won&rsquo;t be able to call that from any existing code.</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -237,40 +491,40 @@
 <span class='line-number'>32</span>
 <span class='line-number'>33</span>
 <span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>@objc class Compatible {
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="p">@</span><span class="n">objc</span> <span class="k">class</span> <span class="n">Compatible</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    let first: String
-</span><span class='line'>    let second: String
+</span><span class='line'>    <span class="k">let</span> <span class="nl">first</span><span class="p">:</span> <span class="n">String</span>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">second</span><span class="p">:</span> <span class="n">String</span>
 </span><span class='line'>
-</span><span class='line'>    init(first: String, second: String) {
-</span><span class='line'>        self.first = first
-</span><span class='line'>        self.second = second
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">first</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">second</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">first</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">second</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class LegendSwiftAdapter: Legend {
+</span><span class='line'><span class="k">class</span> <span class="nl">LegendSwiftAdapter</span><span class="p">:</span> <span class="n">Legend</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    let compatible: Compatible
-</span><span class='line'>    
-</span><span class='line'>    init(compatible: Compatible) {
-</span><span class='line'>        self.compatible = compatible
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func doSomething() -&gt; (String, String) {
-</span><span class='line'>         return (compatible.first, compatible.second)
-</span><span class='line'>    }
+</span><span class='line'>    <span class="k">let</span> <span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">compatible</span> <span class="o">=</span> <span class="n">compatible</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>@objc class LegendObjcAdapter {
+</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>         <span class="k">return</span> <span class="p">(</span><span class="n">compatible</span><span class="p">.</span><span class="n">first</span><span class="p">,</span> <span class="n">compatible</span><span class="p">.</span><span class="n">second</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>    func doSomethingWithATuple(compatible: Compatible) {
-</span><span class='line'>        let adapter = LegendSwiftAdapter(compatible)
-</span><span class='line'>        doSomethingWithLegend(adapter)
-</span><span class='line'>    }
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'><span class="p">@</span><span class="n">objc</span> <span class="k">class</span> <span class="n">LegendObjcAdapter</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">doSomethingWithATuple</span><span class="p">(</span><span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">let</span> <span class="n">adapter</span> <span class="o">=</span> <span class="n">LegendSwiftAdapter</span><span class="p">(</span><span class="n">compatible</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">doSomethingWithLegend</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -290,23 +544,24 @@
 
 <p>The encapsulation part is key. Say you have a bunch of different objects that can all do <em>something</em> and you want to expose those in a unified kind of way then the command pattern is your friend. Another great feature is that it allows for undos of those actions as you can keep a stack of the commands you ran and just pop them off the stack with an undo method. So what does that look like? First you define your command protocol:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol Command {
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">Command</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func execute()
-</span><span class='line'>    func undo()
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span>
 </span><span class='line'>
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Easy enough. Lets get concrete:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -335,40 +590,41 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class Light {
-</span><span class='line'>    
-</span><span class='line'>    func on() {
-</span><span class='line'>        println("The light is on")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func off() {
-</span><span class='line'>        println("The light is off")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="n">Light</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>class LightCommand: Command {
-</span><span class='line'>    
-</span><span class='line'>    let light: Light
-</span><span class='line'>    
-</span><span class='line'>    init(light: Light) {
-</span><span class='line'>        self.light = light
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func execute() {
-</span><span class='line'>        light.on()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func undo() {
-</span><span class='line'>        light.off()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>    <span class="k">func</span> <span class="n">on</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The light is on&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">off</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The light is off&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">LightCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">light</span><span class="p">:</span> <span class="n">Light</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">light</span><span class="p">:</span> <span class="n">Light</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">light</span> <span class="o">=</span> <span class="n">light</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">light</span><span class="p">.</span><span class="n">on</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">light</span><span class="p">.</span><span class="n">off</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Apart from producing a bunch of code that wraps the obvious nothing magic has happened yet. But now imagine you have some other appliance that also has an on/off kind of functionality but with different method signatures:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -397,35 +653,36 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class Heating {
-</span><span class='line'>    
-</span><span class='line'>    func turnUp(degrees: Int) {
-</span><span class='line'>        println("The heating is set to \(degrees)°C")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func turnOff() {
-</span><span class='line'>        println("The heating is off")
-</span><span class='line'>    }
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="n">Heating</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'>    <span class="k">func</span> <span class="n">turnUp</span><span class="p">(</span><span class="nl">degrees</span><span class="p">:</span> <span class="n">Int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The heating is set to \(degrees)°C&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class HeatingCommand: Command {
-</span><span class='line'>    
-</span><span class='line'>    let heating: Heating
-</span><span class='line'>    
-</span><span class='line'>    init(heating: Heating) {
-</span><span class='line'>        self.heating = heating
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func execute() {
-</span><span class='line'>        heating.turnUp(23)
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func undo() {
-</span><span class='line'>        heating.turnOff()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>    <span class="k">func</span> <span class="n">turnOff</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The heating is off&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">HeatingCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">heating</span><span class="p">:</span> <span class="n">Heating</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">heating</span><span class="p">:</span> <span class="n">Heating</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">heating</span> <span class="o">=</span> <span class="n">heating</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">heating</span><span class="p">.</span><span class="n">turnUp</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">heating</span><span class="p">.</span><span class="n">turnOff</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Metric of course.</p>
@@ -434,7 +691,7 @@
 
 <p>Too much code! More cryptic! Ok, ok. So you can also do a similar thing using closures that are your commands. The simplified way to define a closure makes that at least a bit more readable than it was in Objective-C:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -447,19 +704,20 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>typealias CommandClosure = () -&gt; Void
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">typealias</span> <span class="n">CommandClosure</span> <span class="o">=</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span>
 </span><span class='line'>
-</span><span class='line'>var commands = [CommandClosure]()
+</span><span class='line'><span class="k">var</span> <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">CommandClosure</span><span class="p">]()</span>
 </span><span class='line'>
-</span><span class='line'>let heatingCommand = { () -&gt; Void in
-</span><span class='line'>    let heating = Heating()
-</span><span class='line'>    heating.turnUp(23)
-</span><span class='line'>}
+</span><span class='line'><span class="k">let</span> <span class="n">heatingCommand</span> <span class="o">=</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+</span><span class='line'>    <span class="k">let</span> <span class="n">heating</span> <span class="o">=</span> <span class="n">Heating</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">heating</span><span class="p">.</span><span class="n">turnUp</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>commands.append(heatingCommand)
+</span><span class='line'><span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">heatingCommand</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'>// Much later
-</span><span class='line'>commands[0]()</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="c1">// Much later</span>
+</span><span class='line'><span class="n">commands</span><span class="p">[</span><span class="mi">0</span><span class="p">]()</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>That also works. The option to store closures/functions inside of arrays is pretty cool but here you loose the build in undo option. The way around that would be to define both an execute and undo block and whenever you execute a command you push its corresponding undo into your array/stack. But if you&rsquo;re only going one way and can skip the undo, this is a viable way to go.</p>
@@ -479,7 +737,7 @@
 
 <p>First, your behavior protocol and two possible implementations:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -500,34 +758,35 @@
 <span class='line-number'>19</span>
 <span class='line-number'>20</span>
 <span class='line-number'>21</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol TapBehavior {
-</span><span class='line'>    
-</span><span class='line'>    func tap()
-</span><span class='line'>    
-</span><span class='line'>}
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">TapBehavior</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>class CartTapBehavior: TapBehavior {
-</span><span class='line'>    
-</span><span class='line'>    func tap() {
-</span><span class='line'>        println("I'm the cart tap")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}
+</span><span class='line'>    <span class="k">func</span> <span class="n">tap</span><span class="p">()</span>
 </span><span class='line'>
-</span><span class='line'>class WishListTapBehavior: TapBehavior {
-</span><span class='line'>    
-</span><span class='line'>    func tap() {
-</span><span class='line'>        println("I'm the wish list tap")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">CartTapBehavior</span><span class="p">:</span> <span class="n">TapBehavior</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">tap</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;I&#39;m the cart tap&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">WishListTapBehavior</span><span class="p">:</span> <span class="n">TapBehavior</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">tap</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;I&#39;m the wish list tap&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Which brings up an important point: it&rsquo;s always preferrable to program to a protocol/interface rather than to a concrete implementation.</p>
 
 <p>Next, you&rsquo;d want to actually use the behavior:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -538,17 +797,18 @@
 <span class='line-number'>9</span>
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class SomeViewWithAButton: UIView {
-</span><span class='line'>    
-</span><span class='line'>    @IBOutlet weak var aButton: UIButton!
-</span><span class='line'>    
-</span><span class='line'>    var tapBehavior: TapBehavior?
-</span><span class='line'>    
-</span><span class='line'>    @IBAction func didTapButton(sender: AnyObject) {
-</span><span class='line'>        tapBehavior?.tap()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="nl">SomeViewWithAButton</span><span class="p">:</span> <span class="bp">UIView</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">@</span><span class="kt">IBOutlet</span> <span class="k">weak</span> <span class="k">var</span> <span class="nl">aButton</span><span class="p">:</span> <span class="bp">UIButton</span><span class="o">!</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">var</span> <span class="nl">tapBehavior</span><span class="p">:</span> <span class="n">TapBehavior</span><span class="o">?</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">@</span><span class="kt">IBAction</span> <span class="k">func</span> <span class="n">didTapButton</span><span class="p">(</span><span class="nl">sender</span><span class="p">:</span> <span class="n">AnyObject</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">tapBehavior</span><span class="o">?</span><span class="p">.</span><span class="n">tap</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>By making the behavior a property of the class it is now easy to add and replace behaviors at runtime. You might begin to see how this can lead to very flexible designs. A different approach here could have been to create an abstract base view and then create two concrete implementations for different tap behaviors but as soon as you need a new kind of behavior you&rsquo;d be forced to create a new subclass. And now imagine that you have  multiple behaviors in a class – the subclass approach would lead to all kinds of combinations of subclasses that each have to implement variations of behavior.</p>

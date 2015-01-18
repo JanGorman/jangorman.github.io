@@ -103,23 +103,24 @@
 
 <p>The encapsulation part is key. Say you have a bunch of different objects that can all do <em>something</em> and you want to expose those in a unified kind of way then the command pattern is your friend. Another great feature is that it allows for undos of those actions as you can keep a stack of the commands you ran and just pop them off the stack with an undo method. So what does that look like? First you define your command protocol:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>protocol Command {
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">Command</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>    func execute()
-</span><span class='line'>    func undo()
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span>
 </span><span class='line'>
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Easy enough. Lets get concrete:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -148,40 +149,41 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class Light {
-</span><span class='line'>    
-</span><span class='line'>    func on() {
-</span><span class='line'>        println("The light is on")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func off() {
-</span><span class='line'>        println("The light is off")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="n">Light</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>class LightCommand: Command {
-</span><span class='line'>    
-</span><span class='line'>    let light: Light
-</span><span class='line'>    
-</span><span class='line'>    init(light: Light) {
-</span><span class='line'>        self.light = light
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func execute() {
-</span><span class='line'>        light.on()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func undo() {
-</span><span class='line'>        light.off()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>    <span class="k">func</span> <span class="n">on</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The light is on&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">off</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The light is off&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">LightCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">light</span><span class="p">:</span> <span class="n">Light</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">light</span><span class="p">:</span> <span class="n">Light</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">light</span> <span class="o">=</span> <span class="n">light</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">light</span><span class="p">.</span><span class="n">on</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">light</span><span class="p">.</span><span class="n">off</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Apart from producing a bunch of code that wraps the obvious nothing magic has happened yet. But now imagine you have some other appliance that also has an on/off kind of functionality but with different method signatures:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -210,35 +212,36 @@
 <span class='line-number'>27</span>
 <span class='line-number'>28</span>
 <span class='line-number'>29</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>class Heating {
-</span><span class='line'>    
-</span><span class='line'>    func turnUp(degrees: Int) {
-</span><span class='line'>        println("The heating is set to \(degrees)°C")
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func turnOff() {
-</span><span class='line'>        println("The heating is off")
-</span><span class='line'>    }
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="n">Heating</span> <span class="p">{</span>
 </span><span class='line'>
-</span><span class='line'>}
+</span><span class='line'>    <span class="k">func</span> <span class="n">turnUp</span><span class="p">(</span><span class="nl">degrees</span><span class="p">:</span> <span class="n">Int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The heating is set to \(degrees)°C&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>class HeatingCommand: Command {
-</span><span class='line'>    
-</span><span class='line'>    let heating: Heating
-</span><span class='line'>    
-</span><span class='line'>    init(heating: Heating) {
-</span><span class='line'>        self.heating = heating
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func execute() {
-</span><span class='line'>        heating.turnUp(23)
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>    func undo() {
-</span><span class='line'>        heating.turnOff()
-</span><span class='line'>    }
-</span><span class='line'>    
-</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>    <span class="k">func</span> <span class="n">turnOff</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;The heating is off&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nl">HeatingCommand</span><span class="p">:</span> <span class="n">Command</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">heating</span><span class="p">:</span> <span class="n">Heating</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">heating</span><span class="p">:</span> <span class="n">Heating</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">heating</span> <span class="o">=</span> <span class="n">heating</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">execute</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">heating</span><span class="p">.</span><span class="n">turnUp</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">undo</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">heating</span><span class="p">.</span><span class="n">turnOff</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>Metric of course.</p>
@@ -247,7 +250,7 @@
 
 <p>Too much code! More cryptic! Ok, ok. So you can also do a similar thing using closures that are your commands. The simplified way to define a closure makes that at least a bit more readable than it was in Objective-C:</p>
 
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -260,19 +263,20 @@
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
 <span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>typealias CommandClosure = () -&gt; Void
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">typealias</span> <span class="n">CommandClosure</span> <span class="o">=</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span>
 </span><span class='line'>
-</span><span class='line'>var commands = [CommandClosure]()
+</span><span class='line'><span class="k">var</span> <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">CommandClosure</span><span class="p">]()</span>
 </span><span class='line'>
-</span><span class='line'>let heatingCommand = { () -&gt; Void in
-</span><span class='line'>    let heating = Heating()
-</span><span class='line'>    heating.turnUp(23)
-</span><span class='line'>}
+</span><span class='line'><span class="k">let</span> <span class="n">heatingCommand</span> <span class="o">=</span> <span class="p">{</span> <span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Void</span> <span class="k">in</span>
+</span><span class='line'>    <span class="k">let</span> <span class="n">heating</span> <span class="o">=</span> <span class="n">Heating</span><span class="p">()</span>
+</span><span class='line'>    <span class="n">heating</span><span class="p">.</span><span class="n">turnUp</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
 </span><span class='line'>
-</span><span class='line'>commands.append(heatingCommand)
+</span><span class='line'><span class="n">commands</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">heatingCommand</span><span class="p">)</span>
 </span><span class='line'>
-</span><span class='line'>// Much later
-</span><span class='line'>commands[0]()</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'><span class="c1">// Much later</span>
+</span><span class='line'><span class="n">commands</span><span class="p">[</span><span class="mi">0</span><span class="p">]()</span>
+</span></code></pre></td></tr></table></div></figure>
 
 
 <p>That also works. The option to store closures/functions inside of arrays is pretty cool but here you loose the build in undo option. The way around that would be to define both an execute and undo block and whenever you execute a command you push its corresponding undo into your array/stack. But if you&rsquo;re only going one way and can skip the undo, this is a viable way to go.</p>
@@ -334,6 +338,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/01/14/better-mvc/">Better MVC</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/">Design Patterns in Swift: Adapter Pattern</a>
       </li>
     
@@ -392,7 +400,7 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2014 - Jan Gorman -
+  Copyright &copy; 2015 - Jan Gorman -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
