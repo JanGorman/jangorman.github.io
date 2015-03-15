@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Jenkins | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/jenkins/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2015-03-15T13:47:43+01:00</updated>
+  <updated>2015-03-15T13:49:18+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -28,7 +28,7 @@
 pod 'AFNetworking'
 </code></pre>
 
-<p>No version information whatsoever. But running <code>pod install</code> will also generate a <code>Podfile.lock</code> (which you should <em>always</em> check in to your repository). In the past I&rsquo;ve shied away from doing this or the loosely versioned way of defining a dependency with e.g. <code>pod 'AFNetworkin', '~&gt; 2'</code> because I wanted to be able to see which version of a library is included at a glance.</p>
+<p>No version information whatsoever. But running <code>pod install</code> will also generate a <code>Podfile.lock</code> (which you should <em>always</em> check in to your repository). In the past I&rsquo;ve shied away from doing this or the loosely versioned way of defining a dependency with e.g. <code>pod 'AFNetworking', '~&gt; 2'</code> because I wanted to be able to see which version of a library is included at a glance.</p>
 
 <p>So in my case, the <code>Podfile</code> might look something like this:</p>
 
