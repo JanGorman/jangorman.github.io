@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Ios | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/ios/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2015-01-18T15:56:45+01:00</updated>
+  <updated>2015-03-15T13:47:43+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -12,6 +12,109 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Automated Canary Builds]]></title>
+    <link href="http://JanGorman.github.io/blog/2015/03/15/automated-canary-builds/"/>
+    <updated>2015-03-15T10:59:18+01:00</updated>
+    <id>http://JanGorman.github.io/blog/2015/03/15/automated-canary-builds</id>
+    <content type="html"><![CDATA[<p>Like many iOS projects, yours probably also has external code dependencies. There&rsquo;s a number of options how to manage them. You can do it manually by including other projects into your workspace or automate the whole process with tools such as <a href="http://cocoapods.org">Cocoapods</a>, the newer <a href="https://github.com/Carthage/Carthage">Carthage</a> or the little known <a href="https://github.com/buildinspace/peru">peru</a>, which functionally sits somewhere between manually managing dependencies and Carthage.</p>
+
+<p>Whichever way you go, you should always integrate against known versions of these libraries to ensure that builds are reproducible. You&rsquo;ll probably want to stay up to date with newer releases to receive security and bug fixes or performance improvements but at the same time not spend too much effort on manually updating them and verifying that there aren&rsquo;t any bugs. This is were a nightly <strong>Canary Build</strong> comes into play that automatically checks for any updated libraries, creates a build, and runs your tests. A successful build indicates that it&rsquo;s safe for you to update.</p>
+
+<p>I&rsquo;ll focus on Cocoapods here, since that&rsquo;s the one we use at work and also has a nice option to check for new versions of pods. In its simplest form a <code>Podfile</code> looks like this:</p>
+
+<pre><code class="ruby">source 'https://github.com/CocoaPods/Specs'
+pod 'AFNetworking'
+</code></pre>
+
+<p>No version information whatsoever. But running <code>pod install</code> will also generate a <code>Podfile.lock</code> (which you should <em>always</em> check in to your repository). In the past I&rsquo;ve shied away from doing this or the loosely versioned way of defining a dependency with e.g. <code>pod 'AFNetworkin', '~&gt; 2'</code> because I wanted to be able to see which version of a library is included at a glance.</p>
+
+<p>So in my case, the <code>Podfile</code> might look something like this:</p>
+
+<pre><code class="ruby">source 'https://github.com/CocoaPods/Specs'
+
+platform :ios, '7.0'
+xcodeproj 'AwesomeProject'
+
+pod '1PasswordExtension', '1.1.1'
+pod 'AFNetworking', '2.5.0'
+pod 'AFNetworkActivityLogger', '2.0.3'
+pod 'CocoaLumberjack', '1.9.1'
+pod 'DBCamera', '2.3.6'
+pod 'TTTAttributedLabel', '1.10.2'
+…
+</code></pre>
+
+<p>Cocoapods comes with the very handy <code>outdated</code> command to find out about any new versions:</p>
+
+<pre><code class="bash">$ pod outdated
+
+Updating spec repositories
+Analyzing dependencies
+The following updates are available:
+- 1PasswordExtension 1.1.1 -&gt; 1.1.2 (latest version 1.1.2)
+- AFNetworkActivityLogger 2.0.3 -&gt; 2.0.3 (latest version 2.0.4)
+- AFNetworking 2.5.0 -&gt; 2.5.0 (latest version 2.5.1)
+- CocoaLumberjack 1.9.1 -&gt; 1.9.1 (latest version 2.0.0)
+- DBCamera 2.3.6 -&gt; 2.3.6 (latest version 2.3.13)
+- TTTAttributedLabel 1.10.2 -&gt; 1.10.2 (latest version 1.13.2)
+</code></pre>
+
+<p>And then I&rsquo;d usually go in by hand, update the <code>Podfile</code>, run <code>install</code> and build the project. Obviously not the best use of anyone&rsquo;s time. So this is where the Canary Build comes into play. As part of a <a href="http://jenkins-ci.org">Jenkins</a> build script (I like ruby) you could do something like the following to automatically update a strictly versioned <code>Podfile</code>:</p>
+
+<pre><code class="ruby">def update_pods
+  updates = Hash[%x{pod outdated}
+    .lines("\n")
+    .select { |line| line.start_with?('-') }
+    .collect { |line| 
+      match = /(?&lt;pod&gt;[[:alnum:]]{1,}).{1,}(?:[latest version])(?&lt;version&gt;[0-9.]{1,})/.match(line)
+      [match['pod'], match['version']]
+    }
+    .map { |key, value| [key, value] }
+  ]
+
+  return if updates.empty?
+
+  lines = IO.readlines('Podfile').map do |line|
+    if line.start_with?('pod')
+      match = /pod\s['|"](?&lt;pod&gt;[[:alnum:]]{1,})["|']/.match(line)
+      if !match.nil? &amp;&amp; updates[match['pod']]
+        pod = match['pod']
+        line = "pod '#{pod}', '#{updates[pod]}'"
+      end
+    end
+    line
+  end
+
+  File.open('Podfile', 'w') do |file|
+    file.puts lines
+  end
+end
+</code></pre>
+
+<p>A little bit of regex magic to extract the pod name and new version into a hash which we can match against the Podfile and update if needed. Then the script would go off and run <code>pod update</code>, build and run tests and maybe even upload to HockeyApp or TestFlight and send out an email with which pods it updated.</p>
+
+<p>But of course once you start automating this, there is no need to actually version the pods anymore since you&rsquo;ll have the generated <code>Podfile.lock</code> and/or let the script inform you about any pods it did update. In such a case it&rsquo;s enough to simply:</p>
+
+<pre><code class="ruby">def update_pods
+  updates = %x{pod outdated}
+    .lines("\n")
+    .select { |line| line.start_with?('-') }
+  return if updates.empty?
+  %x{pod update}
+  %x{xctool test}
+  # Send out list of updated pods via email
+end
+</code></pre>
+
+<p>A similar approach should also be possible using Carthage if you&rsquo;re willing to go without fixed versions since it will generate a <code>Cartfile.resolved</code> with a fixed version used for the build.</p>
+
+<h3>Wrap-up</h3>
+
+<p>We have several Jenkins jobs running already for different branches and pre-release versions. Adding a nightly Canary Build is a logical next step and I&rsquo;d urge anyone to give it a try. The effort to set it up is fairly low but it does free up a lot of time in the long run and should also help with the overall stability of your apps. I&rsquo;d love to hear about your ideas or experiences with such a process. <a href="https://twitter.com/JanGorman">Get in touch on Twitter.</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Better MVC]]></title>
@@ -476,77 +579,6 @@ class WishListTapBehavior: TapBehavior {
 <p>Even if this is an extremely simple pattern, it&rsquo;s good to keep it in mind the next time you have to implement varying behavior in some kind of base class. Would composing work better than inheriting?</p>
 
 <p>A full example is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[iOS Storage]]></title>
-    <link href="http://JanGorman.github.io/blog/2014/08/31/ios-storage/"/>
-    <updated>2014-08-31T11:57:36+02:00</updated>
-    <id>http://JanGorman.github.io/blog/2014/08/31/ios-storage</id>
-    <content type="html"><![CDATA[<p>When it comes to persistence for iOS there are a few options to choose from:</p>
-
-<ul>
-<li><a href="https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CoreData/cdProgrammingGuide.html">Core Data</a></li>
-<li><a href="http://www.sqlite.org">SQLite</a></li>
-<li><a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/Foundation/Classes/NSKeyedArchiver_Class/Reference/Reference.html">NSKeyedArchiver</a></li>
-<li><a href="https://github.com/nicklockwood/FastCoding">FastCoding</a></li>
-<li><a href="https://github.com/yaptv/YapDatabase">YapDatabase</a></li>
-<li><a href="http://realm.io">Realm</a></li>
-</ul>
-
-
-<p>Which one you end up using of course depends on your use case and each of the solutions has some tradeoff with regards to read/write performance and implementation complexity.</p>
-
-<h3>Background</h3>
-
-<p>At work we had been using Core Data with <a href="https://github.com/magicalpanda/MagicalRecord">Magical Record</a> shielding us from some of the gory implementation details when it comes to wrangling with different <code>NSManagedObjectContext</code> and getting out of the users main thread.</p>
-
-<p>Another promise of MagicalRecord are &ldquo;free&rdquo; lightweight core data migrations using <code>[MagicalRecord setupCoreDataStackWithAutoMigratingSqliteStoreNamed:@"storage.sqlite"]</code> and so one fateful release we decided to kill off an old, unused model. Prior tests revealed no issues going ahead with the migration but a certain combination of being logged in to the app and adding something to your shopping cart resulted in the dreaded <code>Can't merge models with two different entities named …</code> error. A revert and a fast-track approval by Apple saved the day but confidence in MR and Core Data was… a bit shaken.</p>
-
-<h3>Enter Yap</h3>
-
-<p>I had privately been playing around with <a href="https://github.com/yaptv/YapDatabase">YapDatabase</a> and liked it. A lot. Concurrency, views, it being a key-value storage built on top of SQLite and especially the concept of <code>YapDatabaseViewRowChange</code> for updating table views made for compelling features.</p>
-
-<p>So I pitched the idea at work and we migrated over some Core Data tables to Yap. One thing that became obvious during the development was that Yap requires quite a bit of boilerplate code to set up. You always end up creating views, long lived transactions and managing <code>NSNotification</code> to update said transactions. But I rationalized it as being a one time effort and chugged along.</p>
-
-<p>After the release our Crashlytics popped up with an unnerving number of Yap related crashes. Not all, but most having to do with notifications being sent to deallocated observers. This seemed rather strange as we were removing the observer correctly on deallocation and never found a root cause. Stability of the app got so bad though that a hotfix release was scheduled and Yap was replaced.</p>
-
-<h3>Enter NSKeyedArchiver</h3>
-
-<p>We went back to the drawing board and considered our options. We didn&rsquo;t want to deal with Core Data&rsquo;s complexity any longer and reliance on complex third party libraries had left a sour taste. What do we know:</p>
-
-<ul>
-<li>Storage has to run in the background and not block the main thread</li>
-<li>We don&rsquo;t have any big tables… the biggest one needs to store 100 entries. (Others are out of our control because customer&rsquo;s fill them so a huge buffer would set an upper limit of 500 entries)</li>
-<li>It needs to be simple, every one on the team should immediately know what&rsquo;s going on</li>
-<li>No third party library if possible</li>
-<li>No need to store anything in iCloud, any syncing happens between the app and our own servers</li>
-</ul>
-
-
-<p><code>NSKeyedArchiver</code> gets a bad wrap for being slow, and yes, try to store a lot of values (in the thousands!) and it degrades pretty badly but for the use case stated above of maybe 500 entries it actually is pretty decent. Xcode 6 adds the handy <code>[self measureBlock:^{}]</code>, time for some benchmarks.</p>
-
-<ul>
-<li>Yap scored a write performance of 0.005 seconds. Great result</li>
-<li>FastCoding came in a respectable second with 0.013 seconds</li>
-<li>NSKeyedArchiver scored last with 0.110 seconds</li>
-</ul>
-
-
-<p>But, and this is a huge but, it is fast enough for our needs. The database (or essentially just an <code>NSArray</code>) is read on into memory and any changes to the data also happen in memory and it actually is very snappy to use. Persisting to disk is done on a background thread using an <code>NSOperationQueue</code> with a size of one so all additions and deletes queue up nicely and there are no nasty concurrency issues to deal with.</p>
-
-<p>A neat side effect was that we also don&rsquo;t need separate models for Core Data and our API anymore. We use <a href="https://github.com/Mantle/Mantle">Mantle</a> extensively and the cool thing is that all <code>MTLModel</code> subclasses also comply to <code>&lt;NSCoding&gt;</code>. We can pass the same values back and forth.</p>
-
-<h3>Learning</h3>
-
-<ul>
-<li>Always know your real use case</li>
-<li>Benchmark!</li>
-<li>Don&rsquo;t rely on third party libraries as much. Cocoapods are <em>awesome</em> but sometimes simple does it.</li>
-<li>Find edge cases during your QA phase</li>
-</ul>
-
 ]]></content>
   </entry>
   

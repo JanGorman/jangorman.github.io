@@ -9,7 +9,7 @@
   <meta name="author" content="Jan Gorman">
 
   
-  <meta name="description" content="I had been meaning to write this for a while now. And even if the examples are all in Swift (because shiny) the same can be applied to Objective-C &hellip;">
+  <meta name="description" content="Like many iOS projects, yours probably also has external code dependencies. There&rsquo;s a number of options how to manage them. You can do it &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -50,7 +50,7 @@
   <header role="banner"><hgroup>
   <h1><a href="/">Jan Gorman</a></h1>
   
-    <h2>Something about Objective-C and Swift</h2>
+    <h2>Buttery smooth scrolling!</h2>
   
 </hgroup>
 
@@ -77,6 +77,196 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/15/automated-canary-builds/">Automated Canary Builds</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-15T10:59:18+01:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:59 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Like many iOS projects, yours probably also has external code dependencies. There&rsquo;s a number of options how to manage them. You can do it manually by including other projects into your workspace or automate the whole process with tools such as <a href="http://cocoapods.org">Cocoapods</a>, the newer <a href="https://github.com/Carthage/Carthage">Carthage</a> or the little known <a href="https://github.com/buildinspace/peru">peru</a>, which functionally sits somewhere between manually managing dependencies and Carthage.</p>
+
+<p>Whichever way you go, you should always integrate against known versions of these libraries to ensure that builds are reproducible. You&rsquo;ll probably want to stay up to date with newer releases to receive security and bug fixes or performance improvements but at the same time not spend too much effort on manually updating them and verifying that there aren&rsquo;t any bugs. This is were a nightly <strong>Canary Build</strong> comes into play that automatically checks for any updated libraries, creates a build, and runs your tests. A successful build indicates that it&rsquo;s safe for you to update.</p>
+
+<p>I&rsquo;ll focus on Cocoapods here, since that&rsquo;s the one we use at work and also has a nice option to check for new versions of pods. In its simplest form a <code>Podfile</code> looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">source</span> <span class="s1">&#39;https://github.com/CocoaPods/Specs&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;AFNetworking&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>No version information whatsoever. But running <code>pod install</code> will also generate a <code>Podfile.lock</code> (which you should <em>always</em> check in to your repository). In the past I&rsquo;ve shied away from doing this or the loosely versioned way of defining a dependency with e.g. <code>pod 'AFNetworkin', '~&gt; 2'</code> because I wanted to be able to see which version of a library is included at a glance.</p>
+
+<p>So in my case, the <code>Podfile</code> might look something like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="n">source</span> <span class="s1">&#39;https://github.com/CocoaPods/Specs&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">platform</span> <span class="ss">:ios</span><span class="p">,</span> <span class="s1">&#39;7.0&#39;</span>
+</span><span class='line'><span class="n">xcodeproj</span> <span class="s1">&#39;AwesomeProject&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;1PasswordExtension&#39;</span><span class="p">,</span> <span class="s1">&#39;1.1.1&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;AFNetworking&#39;</span><span class="p">,</span> <span class="s1">&#39;2.5.0&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;AFNetworkActivityLogger&#39;</span><span class="p">,</span> <span class="s1">&#39;2.0.3&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;CocoaLumberjack&#39;</span><span class="p">,</span> <span class="s1">&#39;1.9.1&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;DBCamera&#39;</span><span class="p">,</span> <span class="s1">&#39;2.3.6&#39;</span>
+</span><span class='line'><span class="n">pod</span> <span class="s1">&#39;TTTAttributedLabel&#39;</span><span class="p">,</span> <span class="s1">&#39;1.10.2&#39;</span>
+</span><span class='line'><span class="err">…</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Cocoapods comes with the very handy <code>outdated</code> command to find out about any new versions:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>pod outdated
+</span><span class='line'>
+</span><span class='line'>Updating spec repositories
+</span><span class='line'>Analyzing dependencies
+</span><span class='line'>The following updates are available:
+</span><span class='line'>- 1PasswordExtension 1.1.1 -&gt; 1.1.2 <span class="o">(</span>latest version 1.1.2<span class="o">)</span>
+</span><span class='line'>- AFNetworkActivityLogger 2.0.3 -&gt; 2.0.3 <span class="o">(</span>latest version 2.0.4<span class="o">)</span>
+</span><span class='line'>- AFNetworking 2.5.0 -&gt; 2.5.0 <span class="o">(</span>latest version 2.5.1<span class="o">)</span>
+</span><span class='line'>- CocoaLumberjack 1.9.1 -&gt; 1.9.1 <span class="o">(</span>latest version 2.0.0<span class="o">)</span>
+</span><span class='line'>- DBCamera 2.3.6 -&gt; 2.3.6 <span class="o">(</span>latest version 2.3.13<span class="o">)</span>
+</span><span class='line'>- TTTAttributedLabel 1.10.2 -&gt; 1.10.2 <span class="o">(</span>latest version 1.13.2<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And then I&rsquo;d usually go in by hand, update the <code>Podfile</code>, run <code>install</code> and build the project. Obviously not the best use of anyone&rsquo;s time. So this is where the Canary Build comes into play. As part of a <a href="http://jenkins-ci.org">Jenkins</a> build script (I like ruby) you could do something like the following to automatically update a strictly versioned <code>Podfile</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">update_pods</span>
+</span><span class='line'>  <span class="n">updates</span> <span class="o">=</span> <span class="no">Hash</span><span class="o">[</span><span class="sx">%x{pod outdated}</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">lines</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">select</span> <span class="p">{</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span> <span class="n">line</span><span class="o">.</span><span class="n">start_with?</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">collect</span> <span class="p">{</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span>
+</span><span class='line'>      <span class="n">match</span> <span class="o">=</span> <span class="sr">/(?&lt;pod&gt;[[:alnum:]]{1,}).{1,}(?:[latest version])(?&lt;version&gt;[0-9.]{1,})/</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span class='line'>      <span class="o">[</span><span class="n">match</span><span class="o">[</span><span class="s1">&#39;pod&#39;</span><span class="o">]</span><span class="p">,</span> <span class="n">match</span><span class="o">[</span><span class="s1">&#39;version&#39;</span><span class="o">]]</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span> <span class="o">[</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">]</span> <span class="p">}</span>
+</span><span class='line'>  <span class="o">]</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="k">if</span> <span class="n">updates</span><span class="o">.</span><span class="n">empty?</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="n">lines</span> <span class="o">=</span> <span class="no">IO</span><span class="o">.</span><span class="n">readlines</span><span class="p">(</span><span class="s1">&#39;Podfile&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="k">do</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">start_with?</span><span class="p">(</span><span class="s1">&#39;pod&#39;</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">match</span> <span class="o">=</span> <span class="sr">/pod\s[&#39;|&quot;](?&lt;pod&gt;[[:alnum:]]{1,})[&quot;|&#39;]/</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span class='line'>      <span class="k">if</span> <span class="o">!</span><span class="n">match</span><span class="o">.</span><span class="n">nil?</span> <span class="o">&amp;&amp;</span> <span class="n">updates</span><span class="o">[</span><span class="n">match</span><span class="o">[</span><span class="s1">&#39;pod&#39;</span><span class="o">]]</span>
+</span><span class='line'>        <span class="n">pod</span> <span class="o">=</span> <span class="n">match</span><span class="o">[</span><span class="s1">&#39;pod&#39;</span><span class="o">]</span>
+</span><span class='line'>        <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;pod &#39;</span><span class="si">#{</span><span class="n">pod</span><span class="si">}</span><span class="s2">&#39;, &#39;</span><span class="si">#{</span><span class="n">updates</span><span class="o">[</span><span class="n">pod</span><span class="o">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+</span><span class='line'>      <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span>
+</span><span class='line'>    <span class="n">line</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="no">File</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;Podfile&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">file</span><span class="o">|</span>
+</span><span class='line'>    <span class="n">file</span><span class="o">.</span><span class="n">puts</span> <span class="n">lines</span>
+</span><span class='line'>  <span class="k">end</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A little bit of regex magic to extract the pod name and new version into a hash which we can match against the Podfile and update if needed. Then the script would go off and run <code>pod update</code>, build and run tests and maybe even upload to HockeyApp or TestFlight and send out an email with which pods it updated.</p>
+
+<p>But of course once you start automating this, there is no need to actually version the pods anymore since you&rsquo;ll have the generated <code>Podfile.lock</code> and/or let the script inform you about any pods it did update. In such a case it&rsquo;s enough to simply:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">update_pods</span>
+</span><span class='line'>  <span class="n">updates</span> <span class="o">=</span> <span class="sx">%x{pod outdated}</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">lines</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">.</span><span class="n">select</span> <span class="p">{</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span> <span class="n">line</span><span class="o">.</span><span class="n">start_with?</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="k">if</span> <span class="n">updates</span><span class="o">.</span><span class="n">empty?</span>
+</span><span class='line'>  <span class="sx">%x{pod update}</span>
+</span><span class='line'>  <span class="sx">%x{xctool test}</span>
+</span><span class='line'>  <span class="c1"># Send out list of updated pods via email</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A similar approach should also be possible using Carthage if you&rsquo;re willing to go without fixed versions since it will generate a <code>Cartfile.resolved</code> with a fixed version used for the build.</p>
+
+<h3>Wrap-up</h3>
+
+<p>We have several Jenkins jobs running already for different branches and pre-release versions. Adding a nightly Canary Build is a logical next step and I&rsquo;d urge anyone to give it a try. The effort to set it up is fairly low but it does free up a lot of time in the long run and should also help with the overall stability of your apps. I&rsquo;d love to hear about your ideas or experiences with such a process. <a href="https://twitter.com/JanGorman">Get in touch on Twitter.</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1068,6 +1258,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2015/03/15/automated-canary-builds/">Automated Canary Builds</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2015/01/14/better-mvc/">Better MVC</a>
       </li>
     
@@ -1081,10 +1275,6 @@
     
       <li class="post">
         <a href="/blog/2014/11/09/design-patterns-in-swift-strategy/">Design Patterns in Swift: Strategy</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/08/31/ios-storage/">iOS Storage</a>
       </li>
     
   </ul>
