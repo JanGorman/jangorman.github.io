@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Jenkins | Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/blog/categories/jenkins/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2015-03-15T13:49:18+01:00</updated>
+  <updated>2015-03-15T13:51:42+01:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -93,7 +93,7 @@ The following updates are available:
 end
 </code></pre>
 
-<p>A little bit of regex magic to extract the pod name and new version into a hash which we can match against the Podfile and update if needed. Then the script would go off and run <code>pod update</code>, build and run tests and maybe even upload to HockeyApp or TestFlight and send out an email with which pods it updated.</p>
+<p>A little bit of regex magic to extract the pod name and new version into a hash which we can match against the <code>Podfile</code> and update if needed. Then the script would go off and run <code>pod update</code>, build and run tests and maybe even upload to HockeyApp or TestFlight and send out an email with which pods it updated.</p>
 
 <p>But of course once you start automating this, there is no need to actually version the pods anymore since you&rsquo;ll have the generated <code>Podfile.lock</code> and/or let the script inform you about any pods it did update. In such a case it&rsquo;s enough to simply:</p>
 
