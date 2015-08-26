@@ -4,7 +4,7 @@
   <title><![CDATA[Jan Gorman]]></title>
   <link href="http://JanGorman.github.io/atom.xml" rel="self"/>
   <link href="http://JanGorman.github.io/"/>
-  <updated>2015-03-15T13:51:42+01:00</updated>
+  <updated>2015-08-26T12:14:31+02:00</updated>
   <id>http://JanGorman.github.io/</id>
   <author>
     <name><![CDATA[Jan Gorman]]></name>
@@ -12,6 +12,194 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Providers]]></title>
+    <link href="http://JanGorman.github.io/blog/2015/08/26/providers/"/>
+    <updated>2015-08-26T11:42:40+02:00</updated>
+    <id>http://JanGorman.github.io/blog/2015/08/26/providers</id>
+    <content type="html"><![CDATA[<p>As you&rsquo;ll know watchOS 2 allows you to create your own <a href="https://developer.apple.com/library/prerelease/watchos/documentation/General/Conceptual/AppleWatch2TransitionGuide/CreatingaComplication.html#//apple_ref/doc/uid/TP40015234-CH10-SW1">complications</a>. One thing that really stood out to me is the idea of using providers instead of setting either text or images directly. There&rsquo;s the abstract base class <a href="https://developer.apple.com/library/prerelease/watchos/documentation/ClockKit/Reference/CLKTextProvider_class/index.html#//apple_ref/occ/cl/CLKTextProvider">CLKTextProvider</a> and <a href="https://developer.apple.com/library/prerelease/watchos/documentation/ClockKit/Reference/CLKImageProvider_class/index.html#//apple_ref/occ/cl/CLKImageProvider">CLKImageProvider</a> that you provide (boom) to your complication. It&rsquo;s the context in which the complication is rendered that decides on the actual on-screen representation of information.</p>
+
+<p>So there&rsquo;s this app I used to work on that needs to display prices a lot. And depending on the context where this prices is displayed it renders differently. Sounds similar to what the complication does. So in a grossly oversimplified example, let&rsquo;s build something around providers using Swift:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">struct</span> <span class="n">PriceTextProvider</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">basePrice</span><span class="p">:</span> <span class="n">Double</span>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">reducedPrice</span><span class="p">:</span> <span class="n">Double</span>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">vat</span><span class="p">:</span> <span class="n">Double</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is our base provider. I think this close to actually showing the prices on screen it&rsquo;s fine to be using <code>Double</code>. Otherwise use <code>Int</code> and divide by 100, always. Especially when crossing over system boundaries (APIs!) where you can never be sure of language specific rounding behaviour.</p>
+
+<p>Next come our options on <em>what</em> we want to show using the new and great <code>OptionSetType</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">struct</span> <span class="nl">PriceTextRenderOptions</span><span class="p">:</span> <span class="n">OptionSetType</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">rawValue</span><span class="p">:</span> <span class="n">Int</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">rawValue</span><span class="p">:</span> <span class="n">Int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">rawValue</span> <span class="o">=</span> <span class="n">rawValue</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">static</span> <span class="k">let</span> <span class="n">Base</span> <span class="o">=</span> <span class="n">PriceTextRenderOptions</span><span class="p">(</span><span class="nl">rawValue</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">static</span> <span class="k">let</span> <span class="n">Reduced</span> <span class="o">=</span> <span class="n">PriceTextRenderOptions</span><span class="p">(</span><span class="nl">rawValue</span><span class="p">:</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">static</span> <span class="k">let</span> <span class="n">Vat</span> <span class="o">=</span> <span class="n">PriceTextRenderOptions</span><span class="p">(</span><span class="nl">rawValue</span><span class="p">:</span> <span class="mi">4</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">static</span> <span class="k">let</span> <span class="n">BaseAndReduced</span> <span class="o">=</span> <span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="n">Reduced</span><span class="p">]</span>
+</span><span class='line'>    <span class="k">static</span> <span class="k">let</span> <span class="n">FullPrice</span> <span class="o">=</span> <span class="p">[</span><span class="n">Base</span><span class="p">,</span> <span class="n">Reduced</span><span class="p">,</span> <span class="n">Vat</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And context:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">enum</span> <span class="n">PriceTextContext</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="n">Normal</span><span class="p">,</span> <span class="n">Short</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Of course we could also opt to just have a context enum that then actually decides which rendering options to use. Maybe we should, I&rsquo;m undecided.</p>
+
+<p>And now the renderer:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">class</span> <span class="n">PriceTextRenderer</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">priceFormatter</span><span class="p">:</span> <span class="bp">NSNumberFormatter</span>
+</span><span class='line'>    <span class="k">let</span> <span class="nl">vatFormatter</span><span class="p">:</span> <span class="bp">NSNumberFormatter</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">priceFormatter</span><span class="p">:</span> <span class="bp">NSNumberFormatter</span><span class="p">,</span> <span class="nl">vatFormatter</span><span class="p">:</span> <span class="bp">NSNumberFormatter</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">priceFormatter</span> <span class="o">=</span> <span class="n">priceFormatter</span>
+</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">vatFormatter</span> <span class="o">=</span> <span class="n">vatFormatter</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">func</span> <span class="n">render</span><span class="p">(</span><span class="nl">provider</span><span class="p">:</span> <span class="n">PriceTextProvider</span><span class="p">,</span> <span class="nl">context</span><span class="p">:</span> <span class="n">PriceTextContext</span><span class="p">,</span> <span class="nl">options</span><span class="p">:</span> <span class="n">PriceTextRenderOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">NSAttributedString</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">let</span> <span class="n">attributedPrice</span> <span class="o">=</span> <span class="bp">NSMutableAttributedString</span><span class="p">(</span><span class="nl">string</span><span class="p">:</span> <span class="s">&quot;&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">let</span> <span class="n">glue</span> <span class="o">=</span> <span class="n">context</span> <span class="o">==</span> <span class="p">.</span><span class="n">Normal</span> <span class="o">?</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">:</span> <span class="s">&quot; &quot;</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">if</span> <span class="k">let</span> <span class="n">basePrice</span> <span class="o">=</span> <span class="n">priceFormatter</span><span class="p">.</span><span class="n">stringFromNumber</span><span class="p">(</span><span class="bp">NSNumber</span><span class="p">(</span><span class="kt">double</span><span class="o">:</span> <span class="n">provider</span><span class="p">.</span><span class="n">basePrice</span><span class="p">))</span> <span class="k">where</span> <span class="n">options</span><span class="p">.</span><span class="n">contains</span><span class="p">(.</span><span class="n">Base</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">NSAttributedString</span><span class="p">(</span><span class="nl">string</span><span class="p">:</span> <span class="n">basePrice</span><span class="p">,</span> <span class="nl">attributes</span><span class="p">:</span> <span class="p">[</span><span class="nl">NSForegroundColorAttributeName</span><span class="p">:</span> <span class="bp">UIColor</span><span class="p">.</span><span class="n">greenColor</span><span class="p">()])</span>
+</span><span class='line'>            <span class="n">attributedPrice</span><span class="p">.</span><span class="n">appendAttributedString</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">if</span> <span class="k">let</span> <span class="n">reducedPrice</span> <span class="o">=</span> <span class="n">priceFormatter</span><span class="p">.</span><span class="n">stringFromNumber</span><span class="p">(</span><span class="bp">NSNumber</span><span class="p">(</span><span class="kt">double</span><span class="o">:</span> <span class="n">provider</span><span class="p">.</span><span class="n">reducedPrice</span><span class="p">))</span> <span class="k">where</span> <span class="n">options</span><span class="p">.</span><span class="n">contains</span><span class="p">(.</span><span class="n">Reduced</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">NSAttributedString</span><span class="p">(</span><span class="nl">string</span><span class="p">:</span> <span class="s">&quot;\(glue)\(reducedPrice)&quot;</span><span class="p">,</span> <span class="nl">attributes</span><span class="p">:</span> <span class="p">[</span><span class="nl">NSForegroundColorAttributeName</span><span class="p">:</span> <span class="bp">UIColor</span><span class="p">.</span><span class="n">redColor</span><span class="p">()])</span>
+</span><span class='line'>            <span class="n">attributedPrice</span><span class="p">.</span><span class="n">appendAttributedString</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">if</span> <span class="k">let</span> <span class="n">vat</span> <span class="o">=</span> <span class="n">vatFormatter</span><span class="p">.</span><span class="n">stringFromNumber</span><span class="p">(</span><span class="bp">NSNumber</span><span class="p">(</span><span class="kt">double</span><span class="o">:</span> <span class="n">provider</span><span class="p">.</span><span class="n">vat</span><span class="p">))</span> <span class="k">where</span> <span class="n">options</span><span class="p">.</span><span class="n">contains</span><span class="p">(.</span><span class="n">Vat</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">let</span> <span class="n">a</span> <span class="o">=</span> <span class="bp">NSAttributedString</span><span class="p">(</span><span class="nl">string</span><span class="p">:</span> <span class="s">&quot;\(glue)\(vat)&quot;</span><span class="p">)</span>
+</span><span class='line'>            <span class="n">attributedPrice</span><span class="p">.</span><span class="n">appendAttributedString</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">attributedPrice</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There&rsquo;s a few things going on here. So let&rsquo;s brake it down:</p>
+
+<p>First we&rsquo;re supplying the renderer with our <a href="https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSNumberFormatter_Class/">NSNumberFormatters</a>. Still I see people displaying prices without using formatters. Stop it, you&rsquo;re doing it wrong. Even if your designers or you insist on really specific formats (though I&rsquo;d always argue to rather go with the locale defaults), you can fine tune every last bit of the formatter to your liking.</p>
+
+<p>Next up is the render method. You&rsquo;ll probably want to really fine tune this part. Ideas that come to mind are a <code>.Short</code> format that removes decimal places if appropriate, drops certain parts of the price and things like glue words that can be prepended or formatted in a specific way. E.g. <code>VAT: %s</code>. Or maybe work out the reduction in price and highlight that. People love a bargain.</p>
+
+<p>So finally calling the whole thing:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">let</span> <span class="n">locale</span> <span class="o">=</span> <span class="bp">NSLocale</span><span class="p">(</span><span class="nl">localeIdentifier</span><span class="p">:</span> <span class="s">&quot;de_DE&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">let</span> <span class="n">priceFormatter</span> <span class="o">=</span> <span class="bp">NSNumberFormatter</span><span class="p">()</span>
+</span><span class='line'><span class="n">priceFormatter</span><span class="p">.</span><span class="n">numberStyle</span> <span class="o">=</span> <span class="p">.</span><span class="n">CurrencyStyle</span>
+</span><span class='line'><span class="n">priceFormatter</span><span class="p">.</span><span class="n">locale</span> <span class="o">=</span> <span class="n">locale</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">let</span> <span class="n">vatFormatter</span> <span class="o">=</span> <span class="bp">NSNumberFormatter</span><span class="p">()</span>
+</span><span class='line'><span class="n">vatFormatter</span><span class="p">.</span><span class="n">numberStyle</span> <span class="o">=</span> <span class="p">.</span><span class="n">PercentStyle</span>
+</span><span class='line'><span class="n">vatFormatter</span><span class="p">.</span><span class="n">locale</span> <span class="o">=</span> <span class="n">locale</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">let</span> <span class="n">renderer</span> <span class="o">=</span> <span class="n">PriceTextRenderer</span><span class="p">(</span><span class="nl">priceFormatter</span><span class="p">:</span> <span class="n">priceFormatter</span><span class="p">,</span> <span class="nl">vatFormatter</span><span class="p">:</span> <span class="n">vatFormatter</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">let</span> <span class="n">provider</span> <span class="o">=</span> <span class="n">PriceTextProvider</span><span class="p">(</span><span class="nl">basePrice</span><span class="p">:</span> <span class="mf">20.00</span><span class="p">,</span> <span class="nl">reducedPrice</span><span class="p">:</span> <span class="mf">15.00</span><span class="p">,</span> <span class="nl">vat</span><span class="p">:</span> <span class="mf">0.19</span><span class="p">)</span>
+</span><span class='line'><span class="n">renderer</span><span class="p">.</span><span class="n">render</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="nl">context</span><span class="p">:</span> <span class="p">.</span><span class="n">Normal</span><span class="p">,</span> <span class="nl">options</span><span class="p">:</span> <span class="p">[.</span><span class="n">Base</span><span class="p">,</span> <span class="p">.</span><span class="n">Reduced</span><span class="p">,</span> <span class="p">.</span><span class="n">Vat</span><span class="p">])</span>
+</span><span class='line'><span class="n">renderer</span><span class="p">.</span><span class="n">render</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="nl">context</span><span class="p">:</span> <span class="p">.</span><span class="n">Short</span><span class="p">,</span> <span class="nl">options</span><span class="p">:</span> <span class="p">[.</span><span class="n">Base</span><span class="p">,</span> <span class="p">.</span><span class="n">Reduced</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Get the whole thing as a playground over at this <a href="https://gist.github.com/JanGorman/2a28acc110c8c9f38993">github gist</a>.</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Automated Canary Builds]]></title>
