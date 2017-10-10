@@ -1,504 +1,315 @@
-
 <!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
+<html>
+  <head>
   <meta charset="utf-8">
-  <title>Design Patterns in Swift: Adapter Pattern - Jan Gorman</title>
-  <meta name="author" content="Jan Gorman">
+  <!-- (1) Optimize for mobile versions: http://goo.gl/EOpFl -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- (1) force latest IE rendering engine: bit.ly/1c8EiC9 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+  <title>Design Patterns in Swift: Adapter Pattern</title>
+  <meta name="description" content="Already December! Time for a new chapter on applying design patterns in Swift. This time it’s the Adapter Pattern’s turn. Good stuff! And simple!" />
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <meta name="description" content="Already December! Time for a new chapter on applying design patterns in Swift. This time it&rsquo;s the Adapter Pattern&rsquo;s turn. Good stuff! And &hellip;">
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@JanGorman" />
+    <meta name="twitter:title" content="Design Patterns in Swift: Adapter Pattern" />
+    <meta name="twitter:image" content="" />
+    
+    <meta name="twitter:description"  content="Already December! Time for a new chapter on applying design patterns in Swift. This time it’s the Adapter Pattern’s turn. Good stuff! And simple!" />
+    
   
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
   
-  <link rel="canonical" href="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="Jan Gorman" type="application/atom+xml">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
+  <meta property="og:site_name" content="Jan Gorman" />
+  <meta property="og:title" content="Design Patterns in Swift: Adapter Pattern"/>
   
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-55069-23']);
-    _gaq.push(['_trackPageview']);
+  <meta property="og:description" content="Already December! Time for a new chapter on applying design patterns in Swift. This time it’s the Adapter Pattern’s turn. Good stuff! And simple!" />
+  
+  <meta property="og:image" content="" />
+  <meta property="og:url" content="/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/" >
+  <meta property="og:type" content="blog" />
+  <meta property="article:published_time" content="2014-12-01T20:44:17+01:00">
 
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>
+  <link rel="canonical" href="/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/"/>
+  <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/png"/>
+  <link rel="stylesheet" href="//brick.a.ssl.fastly.net/Linux+Libertine:400,400i,700,700i/Open+Sans:400,400i,700,700i">
+  <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 
-
+  <link rel="stylesheet" type="text/css" media="screen" href="/css/main.css" />
+  <link rel="stylesheet" type="text/css" media="print" href="/css/print.css" />
 </head>
+  <link href='/stylesheets/all-456658fd402f091f6213dc405e964de6.css' media='all' rel='stylesheet' type='text/css'>
+  <body itemscope itemtype="http://schema.org/Article">
+    <!-- header start -->
 
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">Jan Gorman</a></h1>
-  
-    <h2>Buttery smooth scrolling!</h2>
-  
-</hgroup>
 
-</header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="https://www.google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:JanGorman.github.io" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div>
-<article class="hentry" role="article">
-  
-  <header>
-    
-      <h1 class="entry-title">Design Patterns in Swift: Adapter Pattern</h1>
-    
-    
-      <p class="meta">
+<!-- header end -->
+    <main class="content" role="main">
+      <article class="post">
         
-
-
-
-
-<time class='entry-date' datetime='2014-12-01T20:44:17+01:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>8:44 pm</span></time>
+        <div class="noarticleimage">
+          <div class="post-meta">
+            <h1 class="post-title">Design Patterns in Swift: Adapter Pattern</h1>
+            <div class="cf post-meta-text">
+              <div class="author-image" style="background-image: url(/assets/images/jg.jpg)">Blog Logo</div>
+              <h4 class="author-name" itemprop="author" itemscope itemtype="http://schema.org/Person"></h4>
+              on
+              <time datetime="2014-12-01T20:44:17+01:00">01 Dec 2014</time>
+            </div>
+          </div>
+        </div>
+        <br>
+        <br>
+        <br>
         
-      </p>
-    
-  </header>
+        <section class="post-content">
+          <div class="post-reading">
+            <span class="post-reading-time"></span> read
+          </div>
+          <a name="topofpage"></a>
+          <p>Already December! Time for a new chapter on applying design patterns in Swift. This time it’s the <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter Pattern’s</a> turn. Good stuff! And simple!</p>
 
+<p>So what is it and what can it do for you? The Adapter Pattern converts the interface of one class into another interface. That’s it. And with this simple pattern you can let classes work together that otherwise couldn’t.</p>
 
-<div class="entry-content"><p>Already December! Time for a new chapter on applying design patterns in Swift. This time it&rsquo;s the <a href="http://en.wikipedia.org/wiki/Adapter_pattern">Adapter Pattern&rsquo;s</a> turn. Good stuff! And simple!</p>
+<p>So let’s assume you have the following:</p>
 
-<p>So what is it and what can it do for you? The Adapter Pattern converts the interface of one class into another interface. That&rsquo;s it. And with this simple pattern you can let classes work together that otherwise couldn&rsquo;t.</p>
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">MusicPlayer</span> <span class="p">{</span>
 
-<p>So let&rsquo;s assume you have the following:</p>
+    <span class="kd">func</span> <span class="nf">insertMedia</span><span class="p">()</span>
+    <span class="kd">func</span> <span class="nf">play</span><span class="p">()</span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">()</span>
-</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nl">CassettePlayer</span><span class="p">:</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Insert mixtape&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Push down clunky button and play&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<span class="p">}</span>
 
+<span class="kd">class</span> <span class="kt">CassettePlayer</span><span class="p">:</span> <span class="kt">MusicPlayer</span> <span class="p">{</span>
+
+    <span class="kd">func</span> <span class="nf">insertMedia</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Insert mixtape"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">play</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Push down clunky button and play"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
 
 <p>Clearly, this kind if thing is only <a href="https://www.youtube.com/watch?v=dIm87r9lnD0">acceptable in the 80s</a>.</p>
 
-<p>Fast forward to now, Spotify, beats, you name it. How do you travel back in time and get a client that accepts a <code>MusicPlayer</code> to stream and play a track? You adapt it:</p>
+<p>Fast forward to now, Spotify, beats, you name it. How do you travel back in time and get a client that accepts a <code class="highlighter-rouge">MusicPlayer</code> to stream and play a track? You adapt it:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">MediaPlayer</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">getMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nl">StreamingMediaPlayer</span><span class="p">:</span> <span class="n">MediaPlayer</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">getMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Acquiring \(title) from the cloud&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">println</span><span class="p">(</span><span class="s">&quot;Playing!&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="c1">// MARK: Adapter in action</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nl">StreamingMediaPlayerAdapter</span><span class="p">:</span> <span class="n">MusicPlayer</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">let</span> <span class="nl">player</span><span class="p">:</span> <span class="n">StreamingMediaPlayer</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">player</span><span class="p">:</span> <span class="n">StreamingMediaPlayer</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">insertMedia</span><span class="p">(</span><span class="nl">title</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">player</span><span class="p">.</span><span class="n">getMedia</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">play</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">player</span><span class="p">.</span><span class="n">play</span><span class="p">()</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">MediaPlayer</span> <span class="p">{</span>
 
+    <span class="kd">func</span> <span class="nf">getMedia</span><span class="p">(</span><span class="nv">title</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span>
+    <span class="kd">func</span> <span class="nf">play</span><span class="p">()</span>
 
-<p>Jaws drop in amazement. But now consider your existing project that you want to spice up with some of that Swift. You&rsquo;ve written your amazing new classes, time to integrate with Objective-C. So you head over to <a href="https://developer.apple.com/library/ios/documentation/swift/conceptual/BuildingCocoaApps/MixandMatch.html#//apple_ref/doc/uid/TP40014216-CH10-XID_77">Using Swift with Cocoa and Objective-C</a> only to find that the new goodness doesn&rsquo;t all work. All of these aren&rsquo;t compatible with Objective-C:</p>
+<span class="p">}</span>
+
+<span class="kd">class</span> <span class="kt">StreamingMediaPlayer</span><span class="p">:</span> <span class="kt">MediaPlayer</span> <span class="p">{</span>
+
+    <span class="kd">func</span> <span class="nf">getMedia</span><span class="p">(</span><span class="nv">title</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Acquiring </span><span class="se">\(</span><span class="n">title</span><span class="se">)</span><span class="s"> from the cloud"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">play</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nf">println</span><span class="p">(</span><span class="s">"Playing!"</span><span class="p">)</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+<span class="c1">// MARK: Adapter in action</span>
+
+<span class="kd">class</span> <span class="kt">StreamingMediaPlayerAdapter</span><span class="p">:</span> <span class="kt">MusicPlayer</span> <span class="p">{</span>
+
+    <span class="k">let</span> <span class="nv">player</span><span class="p">:</span> <span class="kt">StreamingMediaPlayer</span>
+
+    <span class="nf">init</span><span class="p">(</span><span class="nv">player</span><span class="p">:</span> <span class="kt">StreamingMediaPlayer</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">player</span> <span class="o">=</span> <span class="n">player</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">insertMedia</span><span class="p">(</span><span class="nv">title</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">player</span><span class="o">.</span><span class="nf">getMedia</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kd">func</span> <span class="nf">play</span><span class="p">()</span> <span class="p">{</span>
+        <span class="n">player</span><span class="o">.</span><span class="nf">play</span><span class="p">()</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>Jaws drop in amazement. But now consider your existing project that you want to spice up with some of that Swift. You’ve written your amazing new classes, time to integrate with Objective-C. So you head over to <a href="https://developer.apple.com/library/ios/documentation/swift/conceptual/BuildingCocoaApps/MixandMatch.html#//apple_ref/doc/uid/TP40014216-CH10-XID_77">Using Swift with Cocoa and Objective-C</a> only to find that the new goodness doesn’t all work. All of these aren’t compatible with Objective-C:</p>
 
 <ul>
-<li>Generics</li>
-<li>Tuples</li>
-<li>Enumerations defined in Swift</li>
-<li>Structures defined in Swift</li>
-<li>Top-level functions defined in Swift</li>
-<li>Global variables defined in Swift</li>
-<li>Typealiases defined in Swift</li>
-<li>Swift-style variadics</li>
-<li>Nested types</li>
-<li>Curried functions</li>
+  <li>Generics</li>
+  <li>Tuples</li>
+  <li>Enumerations defined in Swift</li>
+  <li>Structures defined in Swift</li>
+  <li>Top-level functions defined in Swift</li>
+  <li>Global variables defined in Swift</li>
+  <li>Typealiases defined in Swift</li>
+  <li>Swift-style variadics</li>
+  <li>Nested types</li>
+  <li>Curried functions</li>
 </ul>
-
 
 <p>Not to despair though, you can still go ahead and be as idiomatic in Swift as you want. With some extra effort you can get the old to talk to the new. Consider a Swift only protocol that just needs to use a tuple:</p>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="k">protocol</span> <span class="n">Legend</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nl">IAmLegend</span><span class="p">:</span> <span class="n">Legend</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;very&quot;</span><span class="p">,</span> <span class="s">&quot;important&quot;</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">func</span> <span class="n">doSomethingWithLegend</span><span class="p">(</span><span class="nl">legend</span><span class="p">:</span> <span class="n">Legend</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">let</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="o">=</span> <span class="n">legend</span><span class="p">.</span><span class="n">doSomething</span><span class="p">()</span>
-</span><span class='line'>    <span class="c1">// Do something else with these variables</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protocol</span> <span class="kt">Legend</span> <span class="p">{</span>
 
+    <span class="kd">func</span> <span class="nf">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)</span>
 
-<p>Important stuff going on. You get the idea. But obviously you won&rsquo;t be able to call that from any existing code.</p>
+<span class="p">}</span>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='swift'><span class='line'><span class="p">@</span><span class="n">objc</span> <span class="k">class</span> <span class="n">Compatible</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">let</span> <span class="nl">first</span><span class="p">:</span> <span class="n">String</span>
-</span><span class='line'>    <span class="k">let</span> <span class="nl">second</span><span class="p">:</span> <span class="n">String</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">first</span><span class="p">:</span> <span class="n">String</span><span class="p">,</span> <span class="nl">second</span><span class="p">:</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">first</span>
-</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">second</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">class</span> <span class="nl">LegendSwiftAdapter</span><span class="p">:</span> <span class="n">Legend</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">let</span> <span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">init</span><span class="p">(</span><span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="nb">self</span><span class="p">.</span><span class="n">compatible</span> <span class="o">=</span> <span class="n">compatible</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>         <span class="k">return</span> <span class="p">(</span><span class="n">compatible</span><span class="p">.</span><span class="n">first</span><span class="p">,</span> <span class="n">compatible</span><span class="p">.</span><span class="n">second</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">@</span><span class="n">objc</span> <span class="k">class</span> <span class="n">LegendObjcAdapter</span> <span class="p">{</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">func</span> <span class="n">doSomethingWithATuple</span><span class="p">(</span><span class="nl">compatible</span><span class="p">:</span> <span class="n">Compatible</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">let</span> <span class="n">adapter</span> <span class="o">=</span> <span class="n">LegendSwiftAdapter</span><span class="p">(</span><span class="n">compatible</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">doSomethingWithLegend</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
+<span class="kd">class</span> <span class="kt">IAmLegend</span><span class="p">:</span> <span class="kt">Legend</span> <span class="p">{</span>
 
+    <span class="kd">func</span> <span class="nf">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nf">return</span> <span class="p">(</span><span class="s">"very"</span><span class="p">,</span> <span class="s">"important"</span><span class="p">)</span>
+    <span class="p">}</span>
 
-<p>I hope it&rsquo;s somewhat clear what&rsquo;s going on. Contrived example maybe… I&rsquo;ll upload a more practical application soon-ish. Anyways, that&rsquo;s the Adapter Pattern applied in Swift for you. As always the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
-</div>
+<span class="p">}</span>
 
+<span class="kd">func</span> <span class="nf">doSomethingWithLegend</span><span class="p">(</span><span class="nv">legend</span><span class="p">:</span> <span class="kt">Legend</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nf">let</span> <span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span> <span class="o">=</span> <span class="n">legend</span><span class="o">.</span><span class="nf">doSomething</span><span class="p">()</span>
+    <span class="c1">// Do something else with these variables</span>
+<span class="p">}</span>
+</code></pre></div></div>
 
-  <footer>
-    <p class="meta">
-      
-  
+<p>Important stuff going on. You get the idea. But obviously you won’t be able to call that from any existing code.</p>
 
-<span class="byline author vcard">Posted by <span class="fn">Jan Gorman</span></span>
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">@objc</span> <span class="kd">class</span> <span class="kt">Compatible</span> <span class="p">{</span>
 
-      
+    <span class="k">let</span> <span class="nv">first</span><span class="p">:</span> <span class="kt">String</span>
+    <span class="k">let</span> <span class="nv">second</span><span class="p">:</span> <span class="kt">String</span>
 
+    <span class="nf">init</span><span class="p">(</span><span class="nv">first</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">second</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">first</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">second</span>
+    <span class="p">}</span>
 
+<span class="p">}</span>
 
+<span class="kd">class</span> <span class="kt">LegendSwiftAdapter</span><span class="p">:</span> <span class="kt">Legend</span> <span class="p">{</span>
 
-<time class='entry-date' datetime='2014-12-01T20:44:17+01:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>8:44 pm</span></time>
-      
-
-<span class="categories">
-  
-    <a class='category' href='/blog/categories/design-patterns/'>design patterns</a>, <a class='category' href='/blog/categories/ios/'>ios</a>, <a class='category' href='/blog/categories/swift/'>swift</a>
-  
-</span>
-
-
-    </p>
+    <span class="k">let</span> <span class="nv">compatible</span><span class="p">:</span> <span class="kt">Compatible</span>
     
-      <div class="sharing">
-  
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/" data-via="JanGorman" data-counturl="http://JanGorman.github.io/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/" >Tweet</a>
-  
-  
-  
-</div>
-
+    <span class="nf">init</span><span class="p">(</span><span class="nv">compatible</span><span class="p">:</span> <span class="kt">Compatible</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">self</span><span class="o">.</span><span class="n">compatible</span> <span class="o">=</span> <span class="n">compatible</span>
+    <span class="p">}</span>
     
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/2014/11/17/design-patterns-in-swift-command/" title="Previous Post: Design Patterns in Swift: Command">&laquo; Design Patterns in Swift: Command</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/2015/01/14/better-mvc/" title="Next Post: Better MVC">Better MVC &raquo;</a>
-      
-    </p>
-  </footer>
-</article>
+    <span class="kd">func</span> <span class="nf">doSomething</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="kt">String</span><span class="p">,</span> <span class="kt">String</span><span class="p">)</span> <span class="p">{</span>
+         <span class="nf">return</span> <span class="p">(</span><span class="n">compatible</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">compatible</span><span class="o">.</span><span class="n">second</span><span class="p">)</span>
+    <span class="p">}</span>
 
-</div>
+<span class="p">}</span>
 
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2015/08/26/providers/">Providers</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/03/15/automated-canary-builds/">Automated Canary Builds</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/01/14/better-mvc/">Better MVC</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/12/01/design-patterns-in-swift-adapter-pattern/">Design Patterns in Swift: Adapter Pattern</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/11/17/design-patterns-in-swift-command/">Design Patterns in Swift: Command</a>
-      </li>
-    
-  </ul>
-</section>
+<span class="kd">@objc</span> <span class="kd">class</span> <span class="kt">LegendObjcAdapter</span> <span class="p">{</span>
 
-<section>
-  <h1>GitHub Repos</h1>
-  <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
-  </ul>
-  
-  <a href="https://github.com/JanGorman">@JanGorman</a> on GitHub
-  
-  <script type="text/javascript">
-    $(document).ready(function(){
-        if (!window.jXHR){
-            var jxhr = document.createElement('script');
-            jxhr.type = 'text/javascript';
-            jxhr.src = '/javascripts/libs/jXHR.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(jxhr, s);
-        }
+    <span class="kd">func</span> <span class="nf">doSomethingWithATuple</span><span class="p">(</span><span class="nv">compatible</span><span class="p">:</span> <span class="kt">Compatible</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">let</span> <span class="nv">adapter</span> <span class="o">=</span> <span class="kt">LegendSwiftAdapter</span><span class="p">(</span><span class="n">compatible</span><span class="p">)</span>
+        <span class="nf">doSomethingWithLegend</span><span class="p">(</span><span class="n">adapter</span><span class="p">)</span>
+    <span class="p">}</span>
 
-        github.showRepos({
-            user: 'JanGorman',
-            count: 5,
-            skip_forks: true,
-            target: '#gh_repos'
-        });
-    });
-  </script>
-  <script src="/javascripts/github.js" type="text/javascript"> </script>
-</section>
+<span class="p">}</span>
 
+</code></pre></div></div>
 
+<p>I hope it’s somewhat clear what’s going on. Contrived example maybe… I’ll upload a more practical application soon-ish. Anyways, that’s the Adapter Pattern applied in Swift for you. As always the code is available as Xcode playground on <a href="https://github.com/JanGorman/Swift-Design-Patterns">github</a>.</p>
 
-
-
-  
-</aside>
-
-
+        </section>
+        <footer class="post-footer">
+          <section class="share">
+            
+              
+                <a class="icon-twitter" href="http://twitter.com/share?text=Design+Patterns+in+Swift%3A+Adapter+Pattern&amp;url=/blog/2014/12/01/design-patterns-in-swift-adapter-pattern"
+                  onclick="window.open(this.href, 'twitter-share', 'width=550,height=255');return false;">
+                <i class="fa fa-twitter"></i><span class="hidden">twitter</span>
+                </a>
+              
+            
+              
+            
+          </section>
+        </footer>
+        <div class="bottom-teaser cf">
+          <div class="isLeft">
+            <h5 class="index-headline featured"><span>Written by</span></h5>
+            <section class="author">
+              <div class="author-image" style="background-image: url(/assets/images/jg.jpg)">Blog Logo</div>
+              <h4>Jan Gorman</h4>
+              <p class="bio"></p>
+              <hr>
+              <p class="published">Published <time datetime="2014-12-01 20:44">01 Dec 2014</time></p>
+            </section>
+          </div>
+          
+          <div class="isRight">
+            <h5 class="index-headline featured"><span>Supported by</span></h5>
+            <footer class="site-footer">
+              <section class="poweredby">Proudly published with <a href="http://jekyllrb.com"> Jekyll</a></section>
+              <a class="subscribe" href="/feed.xml"> <span class="tooltip"> <i class="fa fa-rss"></i> You should subscribe to my feed.</span></a>
+              <div class="inner">
+                <section class="copyright">All content copyright <a href="/">Jan Gorman</a> &copy; 2017<br>All rights reserved.</section>
+              </div>
+            </footer>
+          </div>
+        </div>
+        
+      </article>
+    </main>
+    <div class="bottom-closer">
+      <div class="background-closer-image"  style="background-image: url(/assets/images/background-image.jpg)">
+        Image
+      </div>
+      <div class="inner">
+        <h1 class="blog-title">Jan Gorman</h1>
+        <h2 class="blog-description">Compiling Swift Source Files</h2>
+        <a href=/ class="btn">Back to Overview</a>
+      </div>
     </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2015 - Jan Gorman -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/assets/js/index.js"></script>
+<script type="text/javascript" src="/assets/js/readingTime.min.js"></script>
+<script>
+(function ($) {
+  "use strict";
+  $(document).ready(function(){
 
-</footer>
-  
+    var $window = $(window),
+    $image = $('.post-image-image, .teaserimage-image');
+    
+      $window.on('scroll', function() {
+        var top = $window.scrollTop();
 
+        if (top < 0 || top > 1500) { return; }
+        $image
+          .css('transform', 'translate3d(0px, '+top/3+'px, 0px)')
+          .css('opacity', 1-Math.max(top/700, 0));
+      });
+      $window.trigger('scroll');
 
+      var height = $('.article-image').height();
+      $('.post-content').css('padding-top', height + 'px');
 
+      $('a[href*=#]:not([href=#])').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'')
+         && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({ scrollTop: target.offset().top }, 500);
+            return false;
+          }
+        }
+      });
 
-
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = '//platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
-
-
-
-
-
-</body>
+  });
+}(jQuery));
+</script>
+  </body>
 </html>
