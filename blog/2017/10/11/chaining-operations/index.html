@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <!-- (1) Optimize for mobile versions: http://goo.gl/EOpFl -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- (1) force latest IE rendering engine: bit.ly/1c8EiC9 -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>Chaining Operations</title>
+  <meta name="description" content="Today it’s time to take a closer look at Operation and how they can be used to perform work in the background. Compared to GCD, Operations are pretty useful for tasks that you might want to cancel ..." />
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="MobileOptimized" content="320" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@JanGorman" />
+    <meta name="twitter:title" content="Chaining Operations" />
+    <meta name="twitter:image" content="" />
+    
+    <meta name="twitter:description"  content="Today it’s time to take a closer look at Operation and how they can be used to perform work in the background. Compared to GCD, Operations are pretty useful for tasks that you might want to cancel ..." />
+    
+  
+  
+  <meta property="og:site_name" content="Jan Gorman" />
+  <meta property="og:title" content="Chaining Operations"/>
+  
+  <meta property="og:description" content="Today it’s time to take a closer look at Operation and how they can be used to perform work in the background. Compared to GCD, Operations are pretty useful for tasks that you might want to cancel ..." />
+  
+  <meta property="og:image" content="" />
+  <meta property="og:url" content="/blog/2017/10/11/chaining-operations/" >
+  <meta property="og:type" content="blog" />
+  <meta property="article:published_time" content="2017-10-11T10:15:53+02:00">
+
+  <link rel="canonical" href="/blog/2017/10/11/chaining-operations/"/>
+  <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/png"/>
+  <link rel="stylesheet" href="//brick.a.ssl.fastly.net/Linux+Libertine:400,400i,700,700i/Open+Sans:400,400i,700,700i">
+  <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" type="text/css" media="screen" href="/css/main.css" />
+  <link rel="stylesheet" type="text/css" media="print" href="/css/print.css" />
+</head>
+  <link href='/stylesheets/all-456658fd402f091f6213dc405e964de6.css' media='all' rel='stylesheet' type='text/css'>
+  <body itemscope itemtype="http://schema.org/Article">
+    <!-- header start -->
+
+
+<!-- header end -->
+    <main class="content" role="main">
+      <article class="post">
+        
+        <div class="noarticleimage">
+          <div class="post-meta">
+            <h1 class="post-title">Chaining Operations</h1>
+            <div class="cf post-meta-text">
+              <div class="author-image" style="background-image: url(/assets/images/jg.jpg)">Blog Logo</div>
+              <h4 class="author-name" itemprop="author" itemscope itemtype="http://schema.org/Person"></h4>
+              on
+              <time datetime="2017-10-11T10:15:53+02:00">11 Oct 2017</time>
+            </div>
+          </div>
+        </div>
+        <br>
+        <br>
+        <br>
+        
+        <section class="post-content">
+          <div class="post-reading">
+            <span class="post-reading-time"></span> read
+          </div>
+          <a name="topofpage"></a>
+          <p>Today it’s time to take a closer look at <a href="https://developer.apple.com/documentation/foundation/operation">Operation</a> and how they can be used to perform work in the background. Compared to <a href="https://apple.github.io/swift-corelibs-libdispatch/">GCD</a>, Operations are pretty useful for tasks that you might want to cancel or for tasks that are dependent on one another. What’s maybe less obvious though is how to pass data between dependent operations. This is fairly trivial to achieve by introducing “glue”-operations whose sole purpose it is to shuffle data from one operation to the other. The system defined <a href="https://developer.apple.com/documentation/foundation/blockoperation">BlockOperation</a> subclass can be used to do just that.</p>
+
+<h3 id="a-fetch-operation">A Fetch Operation</h3>
+
+<p>Assume that we need to fetch <em>something</em> from an API. For illustration purposes, let’s use <a href="https://jsonplaceholder.typicode.com">JSONPlaceholder</a> to fetch some users. Let’s define a basic user struct first:</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// If you want to follow along in a Swift Playground</span>
+<span class="c1">// import PlaygroundSupport</span>
+
+<span class="c1">// PlaygroundPage.current.needsIndefiniteExecution = true</span>
+
+<span class="kd">struct</span> <span class="kt">User</span><span class="p">:</span> <span class="kt">Codable</span> <span class="p">{</span>
+  <span class="k">let</span> <span class="nv">id</span><span class="p">:</span> <span class="kt">Int</span>
+  <span class="k">let</span> <span class="nv">name</span><span class="p">:</span> <span class="kt">String</span>
+  <span class="k">let</span> <span class="nv">email</span><span class="p">:</span> <span class="kt">String</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Next is our <code class="highlighter-rouge">FetchOperation</code> subclass that pulls in a list of users:</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+
+<span class="kd">final</span> <span class="kd">class</span> <span class="kt">FetchOperation</span><span class="p">:</span> <span class="kt">Operation</span> <span class="p">{</span>
+
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isAsynchronous</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kc">true</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Let our backing variables emit KVO notifications</span>
+  <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isExecuting</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
+    <span class="k">willSet</span> <span class="p">{</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">didSet</span> <span class="p">{</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isExecuting</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">_isExecuting</span>
+  <span class="p">}</span>
+
+  <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isFinished</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
+    <span class="k">willSet</span> <span class="p">{</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">didSet</span> <span class="p">{</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isFinished</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">_isFinished</span>
+  <span class="p">}</span>
+
+  <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">users</span><span class="p">:</span> <span class="p">[</span><span class="kt">User</span><span class="p">]?</span>
+  <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">Error</span><span class="p">?</span>
+
+  <span class="kd">private</span> <span class="k">let</span> <span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span>
+  <span class="kd">private</span> <span class="k">var</span> <span class="nv">task</span><span class="p">:</span> <span class="kt">URLSessionTask</span><span class="p">?</span>
+
+  <span class="nf">init</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+    <span class="k">super</span><span class="o">.</span><span class="nf">init</span><span class="p">()</span>
+  <span class="p">}</span>
+
+  <span class="k">override</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// For asynchronous operations, check the isCancelled state before performing work</span>
+    <span class="k">guard</span> <span class="o">!</span><span class="n">isCancelled</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+
+    <span class="n">task</span> <span class="o">=</span> <span class="kt">URLSession</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="nf">dataTask</span><span class="p">(</span><span class="nv">with</span><span class="p">:</span> <span class="n">url</span><span class="p">)</span> <span class="p">{</span> <span class="p">[</span><span class="k">weak</span> <span class="k">self</span><span class="p">]</span> <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">error</span> <span class="k">in</span>
+      <span class="k">defer</span> <span class="p">{</span>
+        <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="n">_isFinished</span> <span class="o">=</span> <span class="kc">true</span>
+      <span class="p">}</span>
+      <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">error</span>
+
+      <span class="k">guard</span> <span class="k">let</span> <span class="nv">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">,</span>
+            <span class="k">let</span> <span class="nv">users</span> <span class="o">=</span> <span class="k">try</span><span class="p">?</span> <span class="kt">JSONDecoder</span><span class="p">()</span><span class="o">.</span><span class="nf">decode</span><span class="p">([</span><span class="kt">User</span><span class="p">]</span><span class="o">.</span><span class="k">self</span><span class="p">,</span> <span class="nv">from</span><span class="p">:</span> <span class="n">data</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+      <span class="k">self</span><span class="p">?</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="n">users</span>
+    <span class="p">}</span>
+    <span class="n">task</span><span class="p">?</span><span class="o">.</span><span class="nf">resume</span><span class="p">()</span>
+    <span class="n">_isExecuting</span> <span class="o">=</span> <span class="kc">true</span>
+  <span class="p">}</span>
+
+  <span class="k">override</span> <span class="kd">func</span> <span class="nf">cancel</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">task</span><span class="p">?</span><span class="o">.</span><span class="nf">cancel</span><span class="p">()</span>
+    <span class="n">_isFinished</span> <span class="o">=</span> <span class="kc">true</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>That’s quite a chunk of code. Let’s step through it. For concurrent (read asynchronous) operations, you at least need to override <code class="highlighter-rouge">start()</code>, <code class="highlighter-rouge">isAsynchronous</code>, <code class="highlighter-rouge">isExecuting</code> and <code class="highlighter-rouge">isFinished</code>. <code class="highlighter-rouge">isAsynchronous</code> is easy, just return <code class="highlighter-rouge">true</code>. The other variables are a bit more tricky since they should also send out KVO notifications. The way I do it here is by adding a private backing variable in each case and using their respective <code class="highlighter-rouge">willSet</code> and <code class="highlighter-rouge">didSet</code> handlers to emit the notifications for the correct keyPath.</p>
+
+<p>The <code class="highlighter-rouge">start()</code> method itself then is quite straightforward. A quick sanity check that the operation wasn’t cancelled and then it uses <code class="highlighter-rouge">URLSession</code> to asynchronously call our API.</p>
+
+<p>Extra points for implementing the <code class="highlighter-rouge">cancel()</code> method. In our case, cancel the optional <code class="highlighter-rouge">URLSessionTask</code> and also remember to set the <code class="highlighter-rouge">isFinished</code> status. Even if you don’t perform the work you still need to correctly set this property.</p>
+
+<h3 id="the-process-operation">The Process Operation</h3>
+
+<p>The dumbest example I could come up with is for the <code class="highlighter-rouge">ProcessOperation</code> to print out the users fetched before. This should look very familiar now:</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="kd">class</span> <span class="kt">ProcessOperation</span><span class="p">:</span> <span class="kt">Operation</span> <span class="p">{</span>
+
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isAsynchronous</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kc">true</span>
+  <span class="p">}</span>
+
+  <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isExecuting</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
+    <span class="k">willSet</span> <span class="p">{</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">didSet</span> <span class="p">{</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isExecuting</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">_isExecuting</span>
+  <span class="p">}</span>
+
+  <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isFinished</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
+    <span class="k">willSet</span> <span class="p">{</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">didSet</span> <span class="p">{</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">override</span> <span class="k">var</span> <span class="nv">isFinished</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">_isFinished</span>
+  <span class="p">}</span>
+
+  <span class="k">var</span> <span class="nv">users</span><span class="p">:</span> <span class="p">[</span><span class="kt">User</span><span class="p">]?</span>
+  <span class="k">var</span> <span class="nv">error</span><span class="p">:</span> <span class="kt">Error</span><span class="p">?</span>
+
+  <span class="k">override</span> <span class="kd">func</span> <span class="nf">start</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">guard</span> <span class="o">!</span><span class="n">isFinished</span><span class="p">,</span> <span class="k">let</span> <span class="nv">users</span> <span class="o">=</span> <span class="n">users</span><span class="p">,</span> <span class="n">error</span> <span class="o">==</span> <span class="kc">nil</span> <span class="k">else</span> <span class="p">{</span> <span class="k">return</span> <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">user</span> <span class="k">in</span> <span class="n">users</span> <span class="p">{</span>
+      <span class="nf">print</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="k">override</span> <span class="kd">func</span> <span class="nf">cancel</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">_isFinished</span> <span class="o">=</span> <span class="kc">true</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="glue">Glue</h3>
+
+<p>To glue the two together now:</p>
+
+<div class="language-swift highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Our first operation that fetches something from an API</span>
+<span class="k">let</span> <span class="nv">url</span> <span class="o">=</span> <span class="kt">URL</span><span class="p">(</span><span class="nv">string</span><span class="p">:</span> <span class="s">"https://jsonplaceholder.typicode.com/users"</span><span class="p">)</span><span class="o">!</span>
+<span class="k">let</span> <span class="nv">fetch</span> <span class="o">=</span> <span class="kt">FetchOperation</span><span class="p">(</span><span class="nv">url</span><span class="p">:</span> <span class="n">url</span><span class="p">)</span>
+<span class="c1">// Our second operation that needs the result of the first API call</span>
+<span class="k">let</span> <span class="nv">process</span> <span class="o">=</span> <span class="kt">ProcessOperation</span><span class="p">()</span>
+<span class="c1">// And finally our glue operation to tie the two together</span>
+<span class="k">let</span> <span class="nv">glue</span> <span class="o">=</span> <span class="kt">BlockOperation</span> <span class="p">{</span>
+  <span class="n">process</span><span class="o">.</span><span class="n">users</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">users</span>
+  <span class="n">process</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="n">fetch</span><span class="o">.</span><span class="n">error</span>
+<span class="p">}</span>
+<span class="c1">// Make process depend on glue</span>
+<span class="n">process</span><span class="o">.</span><span class="nf">addDependency</span><span class="p">(</span><span class="n">glue</span><span class="p">)</span>
+<span class="c1">// And Glue depend on fetch, thereby maintaing the right order</span>
+<span class="n">glue</span><span class="o">.</span><span class="nf">addDependency</span><span class="p">(</span><span class="n">fetch</span><span class="p">)</span>
+
+<span class="c1">// Add all operations to an operation queue</span>
+<span class="k">let</span> <span class="nv">queue</span> <span class="o">=</span> <span class="kt">OperationQueue</span><span class="p">()</span>
+<span class="n">queue</span><span class="o">.</span><span class="nf">addOperations</span><span class="p">([</span><span class="n">fetch</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">glue</span><span class="p">],</span> <span class="nv">waitUntilFinished</span><span class="p">:</span> <span class="kc">false</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>To summarise, both the <code class="highlighter-rouge">fetch</code> and <code class="highlighter-rouge">process</code> are custom subclasses of <code class="highlighter-rouge">Operation</code> that do some units of work. For the <code class="highlighter-rouge">glue</code> we just use a <code class="highlighter-rouge">BlockOperation</code>, anything more would be overkill. This design is very flexible since it allows us to re-use operations and compose them for specific tasks in any order we need.</p>
+
+<p>Adding more operations into the mix is as easy as creating further Operations, hooking up the dependencies between them and adding them to our operation queue.</p>
+
+<p>What’s also really cool about Operations and <a href="https://developer.apple.com/documentation/foundation/operationqueue">OperationQueue</a> is that you can use multiple queues and yet still have individual operations depend on one another.</p>
+
+<p>Hope you found this useful, feel free to reach out to me via <a href="https://twitter.com/JanGorman">Twitter</a>.</p>
+
+        </section>
+        <footer class="post-footer">
+          <section class="share">
+            
+              
+                <a class="icon-twitter" href="http://twitter.com/share?text=Chaining+Operations&amp;url=/blog/2017/10/11/chaining-operations"
+                  onclick="window.open(this.href, 'twitter-share', 'width=550,height=255');return false;">
+                <i class="fa fa-twitter"></i><span class="hidden">twitter</span>
+                </a>
+              
+            
+              
+            
+          </section>
+        </footer>
+        <div class="bottom-teaser cf">
+          <div class="isLeft">
+            <h5 class="index-headline featured"><span>Written by</span></h5>
+            <section class="author">
+              <div class="author-image" style="background-image: url(/assets/images/jg.jpg)">Blog Logo</div>
+              <h4>Jan Gorman</h4>
+              <p class="bio"></p>
+              <hr>
+              <p class="published">Published <time datetime="2017-10-11 10:15">11 Oct 2017</time></p>
+            </section>
+          </div>
+          
+          <div class="isRight">
+            <h5 class="index-headline featured"><span>Supported by</span></h5>
+            <footer class="site-footer">
+              <section class="poweredby">Proudly published with <a href="http://jekyllrb.com"> Jekyll</a></section>
+              <a class="subscribe" href="/feed.xml"> <span class="tooltip"> <i class="fa fa-rss"></i> You should subscribe to my feed.</span></a>
+              <div class="inner">
+                <section class="copyright">All content copyright <a href="/">Jan Gorman</a> &copy; 2017<br>All rights reserved.</section>
+              </div>
+            </footer>
+          </div>
+        </div>
+        
+      </article>
+    </main>
+    <div class="bottom-closer">
+      <div class="background-closer-image"  style="background-image: url(/assets/images/background-image.jpg)">
+        Image
+      </div>
+      <div class="inner">
+        <h1 class="blog-title">Jan Gorman</h1>
+        <h2 class="blog-description">Compiling Swift Source Files</h2>
+        <a href=/ class="btn">Back to Overview</a>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="/assets/js/jquery.fitvids.js"></script>
+<script type="text/javascript" src="/assets/js/index.js"></script>
+<script type="text/javascript" src="/assets/js/readingTime.min.js"></script>
+<script>
+(function ($) {
+  "use strict";
+  $(document).ready(function(){
+
+    var $window = $(window),
+    $image = $('.post-image-image, .teaserimage-image');
+    
+      $window.on('scroll', function() {
+        var top = $window.scrollTop();
+
+        if (top < 0 || top > 1500) { return; }
+        $image
+          .css('transform', 'translate3d(0px, '+top/3+'px, 0px)')
+          .css('opacity', 1-Math.max(top/700, 0));
+      });
+      $window.trigger('scroll');
+
+      var height = $('.article-image').height();
+      $('.post-content').css('padding-top', height + 'px');
+
+      $('a[href*=#]:not([href=#])').click(function() {
+        if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'')
+         && location.hostname == this.hostname) {
+          var target = $(this.hash);
+          target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+          if (target.length) {
+            $('html,body').animate({ scrollTop: target.offset().top }, 500);
+            return false;
+          }
+        }
+      });
+
+  });
+}(jQuery));
+</script>
+  </body>
+</html>
