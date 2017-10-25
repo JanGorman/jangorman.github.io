@@ -102,10 +102,10 @@
   <span class="c1">// Let our backing variables emit KVO notifications</span>
   <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isExecuting</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
     <span class="k">willSet</span> <span class="p">{</span>
-      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isExecuting"</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">didSet</span> <span class="p">{</span>
-      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isExecuting"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
   <span class="k">override</span> <span class="k">var</span> <span class="nv">isExecuting</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
@@ -114,10 +114,10 @@
 
   <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isFinished</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
     <span class="k">willSet</span> <span class="p">{</span>
-      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isFinished"</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">didSet</span> <span class="p">{</span>
-      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">FetchOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isFinished"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
   <span class="k">override</span> <span class="k">var</span> <span class="nv">isFinished</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
@@ -179,10 +179,10 @@
 
   <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isExecuting</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
     <span class="k">willSet</span> <span class="p">{</span>
-      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isExecuting"</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">didSet</span> <span class="p">{</span>
-      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isExecuting</span><span class="p">)</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isExecuting"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
   <span class="k">override</span> <span class="k">var</span> <span class="nv">isExecuting</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
@@ -191,10 +191,10 @@
 
   <span class="kd">private</span> <span class="k">var</span> <span class="nv">_isFinished</span> <span class="o">=</span> <span class="kc">false</span> <span class="p">{</span>
     <span class="k">willSet</span> <span class="p">{</span>
-      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+      <span class="nf">willChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isFinished"</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">didSet</span> <span class="p">{</span>
-      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">for</span><span class="p">:</span> <span class="err">\</span><span class="kt">ProcessOperation</span><span class="o">.</span><span class="n">isFinished</span><span class="p">)</span>
+      <span class="nf">didChangeValue</span><span class="p">(</span><span class="nv">forKey</span><span class="p">:</span> <span class="s">"isFinished"</span><span class="p">)</span>
     <span class="p">}</span>
   <span class="p">}</span>
   <span class="k">override</span> <span class="k">var</span> <span class="nv">isFinished</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span>
