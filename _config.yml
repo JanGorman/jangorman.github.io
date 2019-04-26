@@ -14,7 +14,6 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Jan Gorman – Compiling Swift Source Files
-email: gorman.jan@gmail.com
 # description: >- # this means to ignore newlines until "baseurl:"
 #   Personal blog of Jan Gorman.
 baseurl: "" # the subpath of your site, e.g. /blog
