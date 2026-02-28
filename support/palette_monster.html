@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Support | Palette Monster</title>
+  <style>
+    :root {
+      --bg-1: #f3f9ff;
+      --bg-2: #e6fff4;
+      --card: #ffffff;
+      --text: #1a2433;
+      --muted: #526172;
+      --accent: #1b9aaa;
+      --shadow: 0 18px 45px rgba(28, 46, 79, 0.12);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 15%, rgba(27, 154, 170, 0.18), transparent 42%),
+        radial-gradient(circle at 85% 20%, rgba(64, 191, 140, 0.2), transparent 44%),
+        linear-gradient(140deg, var(--bg-1), var(--bg-2));
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(760px, 100%);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(20px, 4vw, 44px);
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(1.7rem, 4vw, 2.3rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: #123047;
+    }
+
+    p, li {
+      line-height: 1.7;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.2vw, 1.08rem);
+    }
+
+    p { margin: 0 0 14px; }
+
+    ul {
+      margin: 0 0 16px 20px;
+      padding: 0;
+    }
+
+    a {
+      color: #0f7890;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(15, 120, 144, 0.4);
+    }
+
+    a:hover { border-bottom-color: rgba(15, 120, 144, 0.85); }
+
+    .accent {
+      height: 5px;
+      width: 84px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #1b9aaa, #40bf8c);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="accent" aria-hidden="true"></div>
+    <h1>Support</h1>
+    <p>If you need assistance with this app or with an in-app purchase, please contact:</p>
+    <p><a href="mailto:gorman.jan@gmail.com">gorman.jan@gmail.com</a></p>
+    <p>Please include:</p>
+    <ul>
+      <li>Your device model</li>
+      <li>iOS version</li>
+      <li>App version</li>
+      <li>A brief description of the issue</li>
+    </ul>
+    <p>For billing questions, you may also contact Apple Support directly:</p>
+    <p><a href="https://support.apple.com">https://support.apple.com</a></p>
+  </main>
+</body>
+</html>
